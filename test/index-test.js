@@ -60,7 +60,9 @@ const
         [ 7, 2 ],    // f
         [ 8 ],       // g
         []           // end
-    ];
+    ],
+    correctPreOrder  = [ 0, 1, 2, 3, 4, 6, 7, 8, 5 ],
+    correctPostOrder = [ 8, 7, 6, 4, 5, 3, 2, 1, 0 ];
 
 
 describe( 'traversals', function() {
@@ -70,8 +72,6 @@ describe( 'traversals', function() {
     describe( 'DFS', function() {
         it( 'traverse a graph without callbacks', () => {
             const
-                correctPreOrder  = [ 0, 1, 2, 3, 4, 6, 7, 8, 5 ],
-                correctPostOrder = [ 8, 7, 6, 4, 5, 3, 2, 1, 0 ],
                 result           = DFS( testGraph );
 
             expect( result ).to.be.an( 'object' );
@@ -86,6 +86,19 @@ describe( 'traversals', function() {
         it( 'should expect an array for the graph argument', () => {
             expect( DFS.bind( null, 'hello' ) ).to.throw( TypeError );
             expect( DFS.bind( null ) ).to.throw( TypeError );
+        } );
+
+        it( 'should return reverse orders if requested', () => {
+            const
+                result = DFS( testGraph, { preOrder: false, postOrder: false, rPreOrder: true, rPostOrder: true } );
+
+            expect( result ).to.not.have.property( 'preOrder' );
+            expect( result ).to.not.have.property( 'postOrder' );
+            expect( result ).to.have.property( 'rPreOrder' );
+            expect( result.rPreOrder ).to.eql( correctPreOrder.slice().reverse() );
+            expect( result ).to.have.property( 'rPostOrder' );
+            expect( result.rPostOrder ).to.eql( correctPostOrder.slice().reverse() );
+
         } );
     } );
 

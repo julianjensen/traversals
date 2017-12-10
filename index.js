@@ -204,6 +204,8 @@ function generic_walker( list, opts = { nodes: [], startIndex: 0, preOrder: true
 
     list = opts.nodes;
 
+    if ( typeof opts.startIndex !== 'number' ) opts.startIndex = 0;
+
     const
         numNodes = list.length;
 
@@ -250,30 +252,30 @@ function generic_walker( list, opts = { nodes: [], startIndex: 0, preOrder: true
 
     if ( opts.preOrder ) r.preOrder = preOrder;
     if ( opts.postOrder ) r.postOrder = postOrder;
-    if ( opts.rPreOrder ) r.rPreOrder = preOrder.reverse();
-    if ( opts.rPostOrder ) r.rPostOrder = postOrder.reverse();
+    if ( opts.rPreOrder ) r.rPreOrder = preOrder.slice().reverse();
+    if ( opts.rPostOrder ) r.rPostOrder = postOrder.slice().reverse();
 
     if ( opts.pre ) preOrder.forEach( pre );
     if ( opts.post ) postOrder.forEach( post );
-    if ( opts.rpre ) ( r.rPreOrder || preOrder.reverse() ).forEach( rpre );
-    if ( opts.rpost ) ( r.rPostOrder || postOrder.reverse() ).forEach( rpost );
+    if ( opts.rpre ) ( r.rPreOrder || preOrder.slice().reverse() ).forEach( rpre );
+    if ( opts.rpost ) ( r.rPostOrder || postOrder.slice().reverse() ).forEach( rpost );
 
     return r;
 }
 
 module.exports = { DFS, BFS };
 
-// const slide = [
-//     [ 1, 8 ],    // start
-//     [ 2, 3 ],    // a
-//     [ 3 ],       // b
-//     [ 4, 5 ],    // c
-//     [ 6 ],       // d
-//     [ 6 ],       // e
-//     [ 7, 2 ],    // f
-//     [ 8 ],       // g
-//     []           // end
-// ];
+const slide = [
+    [ 1, 8 ],    // start
+    [ 2, 3 ],    // a
+    [ 3 ],       // b
+    [ 4, 5 ],    // c
+    [ 6 ],       // d
+    [ 6 ],       // e
+    [ 7, 2 ],    // f
+    [ 8 ],       // g
+    []           // end
+];
 //
 // const result = DFS( slide );
 //
@@ -325,3 +327,4 @@ module.exports = { DFS, BFS };
 //
 // // console.log( 'result:', result );
 //
+DFS( slide, { preOrder: false, postOrder: false, rPreOrder: true, rPostOrder: true } );
