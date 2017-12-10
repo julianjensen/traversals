@@ -1,5 +1,5 @@
 /** ******************************************************************************************************************
- * @file Description of file here.
+ * @file Unit tests for many things, not all, but 100% coverage.
  * @author Julian Jensen <jjdanois@gmail.com>
  * @since 1.0.0
  * @date Sun Dec 10 2017
