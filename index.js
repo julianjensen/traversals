@@ -47,7 +47,7 @@
  * @property {Array<number>} [postOrder]
  * @property {Array<number>} [rPreOrder]
  * @property {Array<number>} [rPostOrder]
- * @property {DFSEdges|BFSEdges} [edges]
+ * @property {DFSEdges} [edges]
  */
 
 /**
@@ -55,7 +55,7 @@
  * @property {Array<number>} [preOrder]
  * @property {Array<number>} [rPreOrder]
  * @property {Array<number>} [levels]
- * @property {Array<Edge>} [edges]
+ * @property {BFSEdges} [edges]
  */
 
 /**
@@ -76,6 +76,7 @@
 /**
  * @param {*} a
  * @return {boolean}
+ * @ignore
  */
 const
     isFn               = a => typeof a === 'function',
@@ -91,6 +92,7 @@ const
  * @param {function(number, number, string):*} add_edge
  * @param {Array<number>} state
  * @return {function(number):*}
+ * @ignore
  */
 function make_dfs_walker( list, preOrder, postOrder, add_edge, state )
 {
@@ -100,6 +102,7 @@ function make_dfs_walker( list, preOrder, postOrder, add_edge, state )
 
     /**
      * @param {number} u
+     * @ignore
      */
     return function __dfs( u ) {
         preNumber[ u ] = preOrder.length;
@@ -132,6 +135,7 @@ function make_dfs_walker( list, preOrder, postOrder, add_edge, state )
  * @param {function(number, number, string):*} add_edge
  * @param {Array<number>} state
  * @return {function(number):*}
+ * @ignore
  */
 function make_bfs_walker( list, preOrder, levels, add_edge, state )
 {
@@ -144,6 +148,7 @@ function make_bfs_walker( list, preOrder, levels, add_edge, state )
      * @param {number} a
      * @param {number} b
      * @return {string}
+     * @ignore
      */
     function classify( a, b )
     {
@@ -156,6 +161,7 @@ function make_bfs_walker( list, preOrder, levels, add_edge, state )
 
     /**
      * @param {number} u
+     * @ignore
      */
     return function __bfs( s ) {
         queue.push( s );

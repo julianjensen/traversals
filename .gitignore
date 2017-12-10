@@ -3,6 +3,7 @@ coverage
 lib-cov
 test-results.xml
 clover.xml
+tmp.md
 
 
 # editor and that .tmp file
