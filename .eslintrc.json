@@ -15,16 +15,6 @@
     },
     "plugins": [
     ],
-    "globals": {
-        "document": false,
-        "navigator": false,
-        "window": false,
-        "global": true,
-        "describe": true,
-        "it": true,
-        "before": true,
-        "JSON": true
-    },
     "rules": {
         "func-call-spacing": [ 2, "never" ],
         "prefer-promise-reject-errors": 2,
@@ -85,7 +75,6 @@
             "^(err|error)$"
         ],
         "indent": "off",
-        "key-spacing": "off",
         "keyword-spacing": [
             2,
             {
@@ -299,10 +288,6 @@
             2,
             "any"
         ],
-        "yield-star-spacing": [
-            2,
-            "both"
-        ],
         "yoda": [
             2,
             "never"
@@ -310,7 +295,6 @@
         "array-bracket-newline": [ 1, { "multiline": true } ],
         "array-bracket-spacing": [ 2, "always" ],
         "object-curly-spacing": [ 2, "always" ],
-        "block-spacing": [ 2, "always" ],
         "computed-property-spacing": [ 1, "always" ]
     }
 }
