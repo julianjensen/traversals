@@ -16,19 +16,20 @@
 
 /**
  * @typedef {object} TraversalOptions
- * @property {Array<Array<number>>} nodes
- * @property {number} [startIndex=0]
- * @property {function(number):boolean} [pre]
- * @property {function(number):boolean} [post]
- * @property {function(number):boolean} [rpre]
- * @property {function(number):boolean} [rpost]
- * @property {function(number, number, string):*|EdgeCB} [edge]
- * @property {boolean} [preOrder=true]
- * @property {boolean} [postOrder=true]
- * @property {boolean} [rPreOrder=false]
- * @property {boolean} [rPostOrder=false]
- * @property {boolean} [edges=true]
- * @property {boolean} [trusted=false]      - Set `trusted` to `true` if you know your input is valid, i.e. an array where each element is either a number or an array of numbers.
+ * @property {Array<Array<number>>} nodes       - Optionally, you can put your array of nodes here
+ * @property {number} [startIndex=0]            - Where to start, defaults to zero
+ * @property {function(number):boolean} [pre]   - Callback in pre-order
+ * @property {function(number):boolean} [post]  - Callback in post-order
+ * @property {function(number):boolean} [rpre]  - Callback in reverse pre-order
+ * @property {function(number):boolean} [rpost] - Callback in reverse post-order
+ * @property {function(number, number, string):*|EdgeCB} [edge] - Callback for every edge
+ * @property {boolean} [spanningTree=true]      - A strongly connected graph with all nodes reachable from a common root
+ * @property {boolean} [preOrder=true]          - Return an array of node indices in pre-order
+ * @property {boolean} [postOrder=true]         - Return an array of node indices in post-order
+ * @property {boolean} [rPreOrder=false]        - Return an array of node indices in reverse pre-order
+ * @property {boolean} [rPostOrder=false]       - Return an array of node indices in reverse post-order
+ * @property {boolean} [edges=true]             - Return edge information in the results object
+ * @property {boolean} [trusted=false]          - Set `trusted` to `true` if you know your input is valid, i.e. an array where each element is either a number or an array of numbers.
  */
 
 /**
@@ -79,7 +80,8 @@
 const
     isFn               = a => typeof a === 'function',
     { isArray: array } = Array,
-    object             = o => typeof o === 'object' && !array( o ) && o !== null;
+    object             = o => typeof o === 'object' && !array( o ) && o !== null,
+    defaultOptions     = { startIndex: 0, preOrder: true, postOrder: true, edges: true, spanningTree: true };
 
 
 /**
@@ -212,12 +214,12 @@ function BFS( list, opts )
  * @param {boolean} isBFS
  * @return {DFSTraversalResult|BFSTraversalResult}
  */
-function generic_walker( list, opts = { nodes: [], startIndex: 0, preOrder: true, postOrder: true, edges: true }, _walker, isBFS )
+function generic_walker( list, opts = defaultOptions, _walker, isBFS )
 {
     if ( array( list ) && object( opts ) )
         opts.nodes = list;
     else if ( object( list ) )
-        opts = Object.assign( { nodes: [], startIndex: 0, preOrder: true, postOrder: true, edges: true }, list );
+        opts = Object.assign( defaultOptions, list );
 
     list = opts.nodes;
 
@@ -234,7 +236,7 @@ function generic_walker( list, opts = { nodes: [], startIndex: 0, preOrder: true
     }
 
     /**
-     * @type {TraversalResult}
+     * @type {DFSTraversalResult|BFSTraversalResult}
      */
     const r = {};
 
@@ -268,15 +270,20 @@ function generic_walker( list, opts = { nodes: [], startIndex: 0, preOrder: true
         state     = [],
         walker    = _walker( list, preOrder, postOrder, add_edge, state );
 
-    let index = opts.startIndex,
-        last  = index - 1;
-
-    if ( last < 0 ) last = numNodes - 1;
-
-    while ( index !== last )
+    if ( opts.spanningTree )
+        walker( opts.startIndex );
+    else
     {
-        if ( !state[ index ] ) walker( index );
-        index = ( index + 1 ) % numNodes;
+        let index = opts.startIndex,
+            last  = index - 1;
+
+        if ( last < 0 ) last = numNodes - 1;
+
+        while ( index !== last )
+        {
+            if ( !state[ index ] ) walker( index );
+            index = ( index + 1 ) % numNodes;
+        }
     }
 
     if ( opts.preOrder ) r.preOrder = preOrder;

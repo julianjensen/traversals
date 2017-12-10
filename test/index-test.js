@@ -106,8 +106,8 @@ describe( 'traversals', function() {
         } );
 
         it( 'should expect an array for the graph argument', () => {
-            expect( DFS.bind( null, 'hello' ) ).to.throw( TypeError );
-            expect( DFS.bind( null ) ).to.throw( TypeError );
+            expect( DFS.bind( null, 'hello' ) ).to.throw;
+            expect( DFS.bind( null ) ).to.throw;
         } );
 
         it( 'should return reverse orders if requested', () => {
@@ -187,7 +187,7 @@ describe( 'traversals', function() {
 
         it( 'should accept an array of nodes in the options object and a bad length', () => {
             const
-                result = DFS( { nodes: irregularTestGraph, startIndex: -irregularTestGraph.length } );
+                result = DFS( { nodes: irregularTestGraph, startIndex: -irregularTestGraph.length, spanningTree: false } );
 
             expect( result ).to.be.an( 'object' );
             expect( result.preOrder ).to.be.an( 'array' );
