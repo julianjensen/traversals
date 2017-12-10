@@ -32,19 +32,44 @@
  */
 
 /**
+ * Edges are categorized by type. For a DFS, the type is one of "tree", "forward", "back", or "cross".
+ * BFS graphs do not have forward edges so the type is limited to one of "tree", "forward", or "cross".
+ *
  * @typedef {object} Edge
  * @property {number} from
  * @property {number} to
- * @property {string} type      - One of "tree", "forward", "back", or "cross"
  */
 
 /**
- * @typedef {object} TraversalResult
+ * @typedef {object} DFSTraversalResult
  * @property {Array<number>} [preOrder]
  * @property {Array<number>} [postOrder]
  * @property {Array<number>} [rPreOrder]
  * @property {Array<number>} [rPostOrder]
+ * @property {DFSEdges|BFSEdges} [edges]
+ */
+
+/**
+ * @typedef {object} BFSTraversalResult
+ * @property {Array<number>} [preOrder]
+ * @property {Array<number>} [rPreOrder]
+ * @property {Array<number>} [levels]
  * @property {Array<Edge>} [edges]
+ */
+
+/**
+ * @typedef {object} DFSEdges
+ * @property {Array<Edge>} tree
+ * @property {Array<Edge>} forward
+ * @property {Array<Edge>} back
+ * @property {Array<Edge>} cross
+ */
+
+/**
+ * @typedef {object} BFSEdges
+ * @property {Array<Edge>} tree
+ * @property {Array<Edge>} back
+ * @property {Array<Edge>} cross
  */
 
 /**
@@ -95,24 +120,22 @@ function make_dfs_walker( list, preOrder, postOrder, add_edge, state )
 
         state[ u ] = 2;
         postOrder.push( u );
-        // rPostOrder.push( rpostCnt-- );
     };
 }
 
 /**
  * @param {Array<Array<number>>} list
  * @param {Array<number>} preOrder
- * @param {Array<number>} postOrder
+ * @param {Array<number>} levels
  * @param {function(number, number, string):*} add_edge
  * @param {Array<number>} state
  * @return {function(number):*}
  */
-function make_bfs_walker( list, preOrder, postOrder, add_edge, state )
+function make_bfs_walker( list, preOrder, levels, add_edge, state )
 {
     const
-        preNumber = [],
-        levels    = [],
         queue     = [],
+        preNumber = [],
         parents   = [];
 
     /**
@@ -135,67 +158,61 @@ function make_bfs_walker( list, preOrder, postOrder, add_edge, state )
     return function __bfs( s ) {
         queue.push( s );
 
-        let v;
+        preOrder.push( s );
+        parents[ s ] = levels[ s ] = 0;
 
-        parents[ s ] = -1;
-        levels[ s ] = 0;
-
-        while ( ( v = queue.shift() ) )
+        while ( queue.length )
         {
-            if ( v < 0 )
-                postOrder.push( -v );
-            else
-            {
-                preNumber[ v ] = preOrder.length;
-                preOrder.push( v );
-                state[ v ] = 2;
+            let v = queue.shift();
 
-                list[ v ].forEach( w => {
-                    if ( typeof parents[ w ] !== 'number' )
-                    {
-                        parents[ w ] = v;
-                        levels[ w ] = levels[ v ] + 1;
-                        add_edge( v, w, 'tree' );
-                        queue.push( w );
-                    }
-                    else
-                        add_edge( v, w, classify( v, w ) );
-                } );
+            list[ v ].forEach( w => {
+                if ( typeof parents[ w ] !== 'number' )
+                {
+                    preNumber[ w ] = preOrder.length - 1;
+                    preOrder.push( w );
+                    state[ w ] = 2;
 
-                queue.push( -v );
-            }
+                    parents[ w ] = v;
+                    levels[ w ] = levels[ v ] + 1;
+                    add_edge( v, w, 'tree' );
+                    queue.push( w );
+                }
+                else
+                    add_edge( v, w, classify( v, w ) );
+            } );
         }
     };
 }
 
 
 /**
- * @param {Array<Array<number>>} list
+ * @param {Array<Array<number>>|TraversalOptions} list
  * @param {TraversalOptions} [opts]
- * @return {TraversalResult}
+ * @return {DFSTraversalResult}
  */
 function DFS( list, opts )
 {
-    return generic_walker( list, opts, make_dfs_walker );
+    return generic_walker( list, opts, make_dfs_walker, false );
 }
 
 /**
- * @param {Array<Array<number>>} list
+ * @param {Array<Array<number>>|TraversalOptions} list
  * @param {TraversalOptions} [opts]
- * @return {TraversalResult}
+ * @return {BFSTraversalResult}
  */
 function BFS( list, opts )
 {
-    return generic_walker( list, opts, make_bfs_walker );
+    return generic_walker( list, opts, make_bfs_walker, true );
 }
 
 /**
  * @param {Array<Array<number>>} list
  * @param {TraversalOptions} [opts]
  * @param {function(number[][], number[], number[], function(number, number, string):*, number[]):function(number):*} _walker
- * @return {TraversalResult}
+ * @param {boolean} isBFS
+ * @return {DFSTraversalResult|BFSTraversalResult}
  */
-function generic_walker( list, opts = { nodes: [], startIndex: 0, preOrder: true, postOrder: true, edges: true }, _walker )
+function generic_walker( list, opts = { nodes: [], startIndex: 0, preOrder: true, postOrder: true, edges: true }, _walker, isBFS )
 {
     if ( array( list ) && object( opts ) )
         opts.nodes = list;
@@ -204,35 +221,52 @@ function generic_walker( list, opts = { nodes: [], startIndex: 0, preOrder: true
 
     list = opts.nodes;
 
-    if ( typeof opts.startIndex !== 'number' ) opts.startIndex = 0;
+    if ( typeof opts.startIndex !== 'number' || opts.startIndex < 0 ) opts.startIndex = 0;
 
     const
-        numNodes = list.length;
+        numNodes = array( list ) && list.length;
 
     if ( !opts.trusted )
     {
         if ( !array( list ) ) throw new TypeError( `The list of nodes must be an array` );
         list = list.map( e => array( e ) ? e : typeof e === 'number' ? [ e ] : [] );
         opts.startIndex = opts.startIndex % numNodes;
-        if ( opts.startIndex < 0 ) opts.startIndex = numNodes + opts.startIndex;
+    }
+
+    /**
+     * @type {TraversalResult}
+     */
+    const r = {};
+
+    if ( opts.edges )
+    {
+        r.edges = {
+            tree:    [],
+            forward: [],
+            back:    [],
+            cross:   []
+        };
     }
 
     const
-        callback   = ( fn, ...args ) => isFn( fn ) && fn( ...args ),
+        callback  = ( fn, ...args ) => isFn( fn ) && fn( ...args ),
 
-        add_edge   = ( from, to, type ) => {
+        add_edge  = ( from, to, type ) => {
+            if ( opts.edges )
+                r.edges[ type ].push( [ from, to ] );
+
             callback( opts.edge, from, to, type );
             callback( opts.edge && opts.edge[ type ], from, to );
         },
-        pre        = n => callback( opts.pre, n ),
-        post       = n => callback( opts.post, n ),
-        rpre       = n => callback( opts.rpre, n ),
-        rpost      = n => callback( opts.rpost, n ),
+        pre       = n => callback( opts.pre, n ),
+        post      = n => callback( opts.post, n ),
+        rpre      = n => callback( opts.rpre, n ),
+        rpost     = n => callback( opts.rpost, n ),
 
-        postOrder  = [],
-        preOrder   = [],
-        state      = [],
-        walker     = _walker( list, preOrder, postOrder, add_edge, state );
+        postOrder = [],
+        preOrder  = [],
+        state     = [],
+        walker    = _walker( list, preOrder, postOrder, add_edge, state );
 
     let index = opts.startIndex,
         last  = index - 1;
@@ -245,86 +279,19 @@ function generic_walker( list, opts = { nodes: [], startIndex: 0, preOrder: true
         index = ( index + 1 ) % numNodes;
     }
 
-    /**
-     * @type {TraversalResult}
-     */
-    const r = {};
-
     if ( opts.preOrder ) r.preOrder = preOrder;
-    if ( opts.postOrder ) r.postOrder = postOrder;
+    if ( !isBFS && opts.postOrder ) r.postOrder = postOrder;
     if ( opts.rPreOrder ) r.rPreOrder = preOrder.slice().reverse();
-    if ( opts.rPostOrder ) r.rPostOrder = postOrder.slice().reverse();
+    if ( !isBFS && opts.rPostOrder ) r.rPostOrder = postOrder.slice().reverse();
 
     if ( opts.pre ) preOrder.forEach( pre );
-    if ( opts.post ) postOrder.forEach( post );
+    if ( !isBFS && opts.post ) postOrder.forEach( post );
     if ( opts.rpre ) ( r.rPreOrder || preOrder.slice().reverse() ).forEach( rpre );
-    if ( opts.rpost ) ( r.rPostOrder || postOrder.slice().reverse() ).forEach( rpost );
+    if ( !isBFS && opts.rpost ) ( r.rPostOrder || postOrder.slice().reverse() ).forEach( rpost );
+
+    if ( isBFS ) r.levels = postOrder;
 
     return r;
 }
 
 module.exports = { DFS, BFS };
-
-const slide = [
-    [ 1, 8 ],    // start
-    [ 2, 3 ],    // a
-    [ 3 ],       // b
-    [ 4, 5 ],    // c
-    [ 6 ],       // d
-    [ 6 ],       // e
-    [ 7, 2 ],    // f
-    [ 8 ],       // g
-    []           // end
-];
-//
-// const result = DFS( slide );
-//
-// const fancy = `          ┌─────────┐
-// ┌─────────┤ START 0 │
-// │         └────┬────┘
-// │              │
-// │              V
-// │            ┌───┐
-// │     ┌──────┤ 1 │
-// │     │      └─┬─┘
-// │     │        │
-// │     │        V
-// │     │      ┌───┐
-// │     │      │ 2 │<───────────┐
-// │     │      └─┬─┘            │
-// │     │        │              │
-// │     │        V              │
-// │     │      ┌───┐            │
-// │     └─────>│   │            │
-// │     ┌──────┤ 3 ├──────┐     │
-// │     │      └───┘      │     │
-// │     │                 │     │
-// │     V                 V     │
-// │   ┌───┐             ┌───┐   │
-// │   │ 4 │             │ 5 │   │
-// │   └─┬─┘             └─┬─┘   │
-// │     │                 │     │
-// │     │                 │     │
-// │     │      ┌───┐      │     │
-// │     └─────>│ 6 │<─────┘     │
-// │            │   ├────────────┘
-// │            └─┬─┘
-// │              │
-// │              V
-// │            ┌───┐
-// │            │ 7 │
-// │            └─┬─┘
-// │              │
-// │              V
-// │         ┌─────────┐
-// └────────>│  EXIT 8 │
-//           └─────────┘
-// `;
-//
-// // console.log( fancy.replace( /(\d+)/g, ( $0, $1 ) => Number( $1 ) + 1 ) );
-// // console.log( 'preOrder:', result.preOrder.map( i => i + 1 ) );
-// // console.log( 'postOrder:', result.postOrder.map( i => i + 1 ) );
-//
-// // console.log( 'result:', result );
-//
-DFS( slide, { preOrder: false, postOrder: false, rPreOrder: true, rPostOrder: true } );
