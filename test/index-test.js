@@ -7,7 +7,7 @@
 "use strict";
 
 const
-    testGraphVisual = `          ┌─────────┐
+    testGraphVisual    = `          ┌─────────┐
 ┌─────────┤ START 0 │
 │         └────┬────┘
 │              │
@@ -48,9 +48,9 @@ const
 └────────>│  EXIT 8 │
           └─────────┘
 `,
-    expect          = require( 'chai' ).expect,
-    { DFS, BFS }    = require( '../index' ),
-    testGraph       = [
+    expect             = require( 'chai' ).expect,
+    { DFS, BFS }       = require( '../index' ),
+    testGraph          = [
         [ 1, 8 ],    // start
         [ 2, 3 ],    // a
         [ 3 ],       // b
@@ -61,8 +61,19 @@ const
         [ 8 ],       // g
         []           // end
     ],
-    correctPreOrder  = [ 0, 1, 2, 3, 4, 6, 7, 8, 5 ],
-    correctPostOrder = [ 8, 7, 6, 4, 5, 3, 2, 1, 0 ];
+    irregularTestGraph = [
+        [ 1, 8 ],    // start
+        [ 2, 3 ],    // a
+        3,       // b
+        [ 4, 5 ],    // c
+        6,       // d
+        6,       // e
+        [ 7, 2 ],    // f
+        [ 8 ],       // g
+        void 0           // end
+    ],
+    correctPreOrder    = [ 0, 1, 2, 3, 4, 6, 7, 8, 5 ],
+    correctPostOrder   = [ 8, 7, 6, 4, 5, 3, 2, 1, 0 ];
 
 
 describe( 'traversals', function() {
@@ -72,7 +83,7 @@ describe( 'traversals', function() {
     describe( 'DFS', function() {
         it( 'traverse a graph without callbacks', () => {
             const
-                result           = DFS( testGraph );
+                result = DFS( testGraph );
 
             expect( result ).to.be.an( 'object' );
             expect( result.preOrder ).to.be.an( 'array' );
@@ -99,6 +110,19 @@ describe( 'traversals', function() {
             expect( result ).to.have.property( 'rPostOrder' );
             expect( result.rPostOrder ).to.eql( correctPostOrder.slice().reverse() );
 
+        } );
+
+        it( 'should understand a mixed array', () => {
+            const
+                result = DFS( irregularTestGraph );
+
+            expect( result ).to.be.an( 'object' );
+            expect( result.preOrder ).to.be.an( 'array' );
+            expect( result.postOrder ).to.be.an( 'array' );
+            expect( result.preOrder ).to.eql( correctPreOrder );
+            expect( result.postOrder ).to.eql( correctPostOrder );
+            expect( result ).to.not.have.property( 'rPreOrder' );
+            expect( result ).to.not.have.property( 'rPostOrder' );
         } );
     } );
 
