@@ -42,15 +42,15 @@
     },
     "homepage": "https://github.com/julianjensen/traversals#readme",
     "devDependencies": {
-        "eslint": "^4.4.0",
-        "istanbul": "^0.4.5",
-        "mocha": "^3.5.0",
         "chai": "^4.1.1",
-        "coveralls": "^2.13.1",
-        "codacy-coverage": "^2.0.2",
-        "rimraf": "^2.4.2",
+        "codacy-coverage": "^2.0.3",
+        "coveralls": "^2.13.3",
         "dependency-check": "^2.5.1",
         "doctoc": "^0.15.0",
-        "mocha-lcov-reporter": "^1.3.0"
+        "eslint": "^4.13.0",
+        "istanbul": "^0.4.5",
+        "mocha": "^3.5.0",
+        "mocha-lcov-reporter": "^1.3.0",
+        "rimraf": "^2.4.2"
     }
 }

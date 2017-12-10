@@ -3,6 +3,8 @@
 [![Coveralls Status][coveralls-image]][coveralls-url]
 [![Build Status][travis-image]][travis-url]
 [![Dependency Status][depstat-image]][depstat-url]
+[![npm version][npm-image]][npm-url]
+[![License][license-image]][license-url]
 
 > Small module for graph traversals, supporting DFS and BFS with niceties added for pre- and post-order, including their reverses.
 
@@ -35,3 +37,9 @@ MIT © [Julian Jensen](https://github.com/julianjensen/traversals)
 
 [depstat-url]: https://gemnasium.com/github.com/julianjensen/traversals
 [depstat-image]: https://gemnasium.com/badges/github.com/julianjensen/traversals.svg
+
+[npm-url]: https://badge.fury.io/js/traversals
+[npm-image]: https://badge.fury.io/js/traversals.svg
+
+[license-url]: https://github.com/julianjensen/dominators/blob/master/LICENSE
+[license-image]: https://img.shields.io/badge/license-MIT-brightgreen.svg
