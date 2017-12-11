@@ -9,8 +9,6 @@
         "test": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/",
         "coveralls": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
         "postcoveralls": "rimraf ./coverage",
-        "codacy": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/.bin/codacy-coverage",
-        "postcodacy": "rimraf ./coverage",
         "prepublish": "npm test",
         "patch": "npm version patch && npm publish",
         "minor": "npm version minor && npm publish",
@@ -40,7 +38,6 @@
     "homepage": "https://github.com/julianjensen/traversals#readme",
     "devDependencies": {
         "chai": "^4.1.1",
-        "codacy-coverage": "^2.0.3",
         "coveralls": "^2.13.3",
         "dependency-check": "^2.5.1",
         "doctoc": "^0.15.0",
