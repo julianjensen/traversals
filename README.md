@@ -76,35 +76,63 @@ DFS( someGraph, { edge: { tree: ( from, to ) => console.log( `tree from ${from} 
 
 <dl>
 <dt><a href="#DFS">DFS(list, [opts])</a> ⇒ <code><a href="#DFSTraversalResult">DFSTraversalResult</a></code></dt>
-<dd></dd>
+<dd><p>A more involved traversal that&#39;s not as efficient as the simple walkers but provide more information.
+You can use this to generate pre-order, post-order (and their reverses) sequences, as well as edge
+information, all in a single pass.</p>
+<p>It does not provide levels which you need to get from the BFS traversal.</p>
+</dd>
 <dt><a href="#BFS">BFS(list, [opts])</a> ⇒ <code><a href="#BFSTraversalResult">BFSTraversalResult</a></code></dt>
-<dd></dd>
+<dd><p>Much the same as the DFS function, it provides the same information and capabilities with a few exceptions.</p>
+<ol>
+<li>It does not provide forward edge information.</li>
+<li>It does not generate a post-order walk.</li>
+</ol>
+<p>It does, however, provides levels.</p>
+</dd>
+<dt><a href="#preOrder">preOrder(nodes, fn, [root])</a></dt>
+<dd><p>Call this with the node list and a callback function. If the graph does not start at index <code>0</code> then
+add the actual start index as the third argument.</p>
+</dd>
+<dt><a href="#postOrder">postOrder(nodes, fn, [root])</a></dt>
+<dd><p>Call this with the node list and a callback function. If the graph does not start at index <code>0</code> then
+add the actual start index as the third argument.</p>
+</dd>
+<dt><a href="#rPreOrder">rPreOrder(nodes, fn, [root])</a></dt>
+<dd><p>Call this with the node list and a callback function. If the graph does not start at index <code>0</code> then
+add the actual start index as the third argument.</p>
+</dd>
+<dt><a href="#rPostOrder">rPostOrder(nodes, fn, [root])</a></dt>
+<dd><p>Call this with the node list and a callback function. If the graph does not start at index <code>0</code> then
+add the actual start index as the third argument.</p>
+</dd>
 </dl>
 
 ## Typedefs
 
 <dl>
-<dt><a href="#EdgeCB">EdgeCB</a> : <code>object</code></dt>
-<dd></dd>
 <dt><a href="#TraversalOptions">TraversalOptions</a> : <code>object</code></dt>
 <dd></dd>
-<dt><a href="#Edge">Edge</a> : <code>object</code></dt>
-<dd><p>Edges are categorized by type. For a DFS, the type is one of &quot;tree&quot;, &quot;forward&quot;, &quot;back&quot;, or &quot;cross&quot;.
-BFS graphs do not have forward edges so the type is limited to one of &quot;tree&quot;, &quot;forward&quot;, or &quot;cross&quot;.</p>
+<dt><a href="#EdgeCB">EdgeCB</a> : <code>function</code></dt>
+<dd><p>You can define the edge field as a normal function and it will be called on each discovered edge with the
+<code>from</code> and <code>to</code> node numbers, as well as the edge type. Alternatively, yuou can also just set the field to an object.</p>
+<p>The function or object can have four optional fields, one for each edge type. These will be called on the discovery
+of their respective types. If you added these fields to a function, the main function will be called, in addition to these.</p>
 </dd>
 <dt><a href="#DFSTraversalResult">DFSTraversalResult</a> : <code>object</code></dt>
 <dd></dd>
 <dt><a href="#BFSTraversalResult">BFSTraversalResult</a> : <code>object</code></dt>
-<dd></dd>
-<dt><a href="#DFSEdges">DFSEdges</a> : <code>object</code></dt>
-<dd></dd>
-<dt><a href="#BFSEdges">BFSEdges</a> : <code>object</code></dt>
 <dd></dd>
 </dl>
 
 <a name="DFS"></a>
 
 ## DFS(list, [opts]) ⇒ [<code>DFSTraversalResult</code>](tmp.md#DFSTraversalResult)
+A more involved traversal that's not as efficient as the simple walkers but provide more information.
+You can use this to generate pre-order, post-order (and their reverses) sequences, as well as edge
+information, all in a single pass.
+
+It does not provide levels which you need to get from the BFS traversal.
+
 **Kind**: global function  
 
 | Param | Type |
@@ -115,6 +143,13 @@ BFS graphs do not have forward edges so the type is limited to one of &quot;tree
 <a name="BFS"></a>
 
 ## BFS(list, [opts]) ⇒ [<code>BFSTraversalResult</code>](tmp.md#BFSTraversalResult)
+Much the same as the DFS function, it provides the same information and capabilities with a few exceptions.
+
+1. It does not provide forward edge information.
+2. It does not generate a post-order walk.
+
+It does, however, provides levels.
+
 **Kind**: global function  
 
 | Param | Type |
@@ -122,18 +157,61 @@ BFS graphs do not have forward edges so the type is limited to one of &quot;tree
 | list | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> \| [<code>TraversalOptions</code>](tmp.md#TraversalOptions) | 
 | [opts] | [<code>TraversalOptions</code>](tmp.md#TraversalOptions) | 
 
-<a name="EdgeCB"></a>
+<a name="preOrder"></a>
 
-## EdgeCB : <code>object</code>
-**Kind**: global typedef  
-**Properties**
+## preOrder(nodes, fn, [root])
+Call this with the node list and a callback function. If the graph does not start at index `0` then
+add the actual start index as the third argument.
 
-| Name | Type |
-| --- | --- |
-| tree | <code>function</code> | 
-| forward | <code>function</code> | 
-| back | <code>function</code> | 
-| cross | <code>function</code> | 
+**Kind**: global function  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| nodes | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> |  | 
+| fn | <code>function</code> |  | 
+| [root] | <code>number</code> | <code>0</code> | 
+
+<a name="postOrder"></a>
+
+## postOrder(nodes, fn, [root])
+Call this with the node list and a callback function. If the graph does not start at index `0` then
+add the actual start index as the third argument.
+
+**Kind**: global function  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| nodes | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> |  | 
+| fn | <code>function</code> |  | 
+| [root] | <code>number</code> | <code>0</code> | 
+
+<a name="rPreOrder"></a>
+
+## rPreOrder(nodes, fn, [root])
+Call this with the node list and a callback function. If the graph does not start at index `0` then
+add the actual start index as the third argument.
+
+**Kind**: global function  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| nodes | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> |  | 
+| fn | <code>function</code> |  | 
+| [root] | <code>number</code> | <code>0</code> | 
+
+<a name="rPostOrder"></a>
+
+## rPostOrder(nodes, fn, [root])
+Call this with the node list and a callback function. If the graph does not start at index `0` then
+add the actual start index as the third argument.
+
+**Kind**: global function  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| nodes | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> |  | 
+| fn | <code>function</code> |  | 
+| [root] | <code>number</code> | <code>0</code> | 
 
 <a name="TraversalOptions"></a>
 
@@ -149,7 +227,7 @@ BFS graphs do not have forward edges so the type is limited to one of &quot;tree
 | post | <code>function</code> |  | Callback in post-order |
 | rpre | <code>function</code> |  | Callback in reverse pre-order |
 | rpost | <code>function</code> |  | Callback in reverse post-order |
-| edge | <code>function</code>\|<code>EdgeCB</code> |  | Callback for every edge |
+| edge | [<code>EdgeCB</code>](tmp.md#EdgeCB) |  | Callback for every edge or each type, see `EdgeCB` below |
 | spanningTree | <code>boolean</code> | <code>true</code> | A strongly connected graph with all nodes reachable from a common root |
 | preOrder | <code>boolean</code> | <code>true</code> | Return an array of node indices in pre-order |
 | postOrder | <code>boolean</code> | <code>true</code> | Return an array of node indices in post-order |
@@ -158,20 +236,46 @@ BFS graphs do not have forward edges so the type is limited to one of &quot;tree
 | edges | <code>boolean</code> | <code>true</code> | Return edge information in the results object |
 | trusted | <code>boolean</code> | <code>false</code> | Set `trusted` to `true` if you know your input is valid, i.e. an array where each element is either a number or an array of numbers. |
 
-<a name="Edge"></a>
+<a name="EdgeCB"></a>
 
-## Edge : <code>object</code>
-Edges are categorized by type. For a DFS, the type is one of "tree", "forward", "back", or "cross".
-BFS graphs do not have forward edges so the type is limited to one of "tree", "forward", or "cross".
+## EdgeCB : <code>function</code>
+You can define the edge field as a normal function and it will be called on each discovered edge with the
+`from` and `to` node numbers, as well as the edge type. Alternatively, yuou can also just set the field to an object.
+
+The function or object can have four optional fields, one for each edge type. These will be called on the discovery
+of their respective types. If you added these fields to a function, the main function will be called, in addition to these.
 
 **Kind**: global typedef  
 **Properties**
 
-| Name | Type |
-| --- | --- |
-| from | <code>number</code> | 
-| to | <code>number</code> | 
+| Name | Type | Description |
+| --- | --- | --- |
+| tree | <code>function</code> | Callback for each tree edge |
+| forward | <code>function</code> | Callback for each forward edge (not applicable for BFS) |
+| back | <code>function</code> | Callback for each back edge |
+| cross | <code>function</code> | Callback for each cross edge |
 
+**Example**  
+```js
+// For each backedge
+DFS( nodes, {
+    edge: { back: ( from, to ) => console.log( `back edge from ${from} to ${to}` )
+// ... } );
+```
+**Example**  
+```js
+// For all edges and one just for tree edges
+function everyEdge( from, to, type )
+{
+    console.log( `Discovered ${type} edge from ${from} to ${to}` );
+}
+
+everyEdge.tree = ( from, to ) => console.log( `Discovered a tree edge from ${from} to ${to}` );
+
+DFS( nodes, {
+    edge: everyEdge
+// ... } );
+```
 <a name="DFSTraversalResult"></a>
 
 ## DFSTraversalResult : <code>object</code>
@@ -180,11 +284,11 @@ BFS graphs do not have forward edges so the type is limited to one of "tree", "f
 
 | Name | Type |
 | --- | --- |
-| preOrder | <code>Array&lt;number&gt;</code> | 
-| postOrder | <code>Array&lt;number&gt;</code> | 
-| rPreOrder | <code>Array&lt;number&gt;</code> | 
-| rPostOrder | <code>Array&lt;number&gt;</code> | 
-| edges | [<code>DFSEdges</code>](tmp.md#DFSEdges) | 
+| preOrder | <code>Array.&lt;number&gt;</code> | 
+| postOrder | <code>Array.&lt;number&gt;</code> | 
+| rPreOrder | <code>Array.&lt;number&gt;</code> | 
+| rPostOrder | <code>Array.&lt;number&gt;</code> | 
+| edges | <code>DFSEdges</code> | 
 
 <a name="BFSTraversalResult"></a>
 
@@ -197,33 +301,7 @@ BFS graphs do not have forward edges so the type is limited to one of "tree", "f
 | preOrder | <code>Array.&lt;number&gt;</code> | 
 | rPreOrder | <code>Array.&lt;number&gt;</code> | 
 | levels | <code>Array.&lt;number&gt;</code> | 
-| edges | [<code>BFSEdges</code>](tmp.md#BFSEdges) | 
-
-<a name="DFSEdges"></a>
-
-## DFSEdges : <code>object</code>
-**Kind**: global typedef  
-**Properties**
-
-| Name | Type |
-| --- | --- |
-| tree | [<code>Array&lt;Edge&gt;</code>](tmp.md#Edge) | 
-| forward | [<code>Array&lt;Edge&gt;</code>](tmp.md#Edge) | 
-| back | [<code>Array&lt;Edge&gt;</code>](tmp.md#Edge) | 
-| cross | [<code>Array&lt;Edge&gt;</code>](tmp.md#Edge) | 
-
-<a name="BFSEdges"></a>
-
-## BFSEdges : <code>object</code>
-**Kind**: global typedef  
-**Properties**
-
-| Name | Type |
-| --- | --- |
-| tree | [<code>Array&lt;Edge&gt;</code>](tmp.md#Edge) | 
-| back | [<code>Array&lt;Edge&gt;</code>](tmp.md#Edge) | 
-| cross | [<code>Array&lt;Edge&gt;</code>](tmp.md#Edge) | 
-
+| edges | <code>BFSEdges</code> | 
 
 
 ## License

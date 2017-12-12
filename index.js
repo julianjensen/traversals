@@ -7,14 +7,6 @@
 "use strict";
 
 /**
- * @typedef {object} EdgeCB
- * @property {function(number, number):*} [tree]
- * @property {function(number, number):*} [forward]
- * @property {function(number, number):*} [back]
- * @property {function(number, number):*} [cross]
- */
-
-/**
  * @typedef {object} TraversalOptions
  * @property {Array<Array<number>>} nodes       - Optionally, you can put your array of nodes here
  * @property {number} [startIndex=0]            - Where to start, defaults to zero
@@ -22,7 +14,7 @@
  * @property {function(number):boolean} [post]  - Callback in post-order
  * @property {function(number):boolean} [rpre]  - Callback in reverse pre-order
  * @property {function(number):boolean} [rpost] - Callback in reverse post-order
- * @property {function(number, number, string):*|EdgeCB} [edge] - Callback for every edge
+ * @property {EdgeCB} [edge]                    - Callback for every edge or each type, see `EdgeCB` below
  * @property {boolean} [spanningTree=true]      - A strongly connected graph with all nodes reachable from a common root
  * @property {boolean} [preOrder=true]          - Return an array of node indices in pre-order
  * @property {boolean} [postOrder=true]         - Return an array of node indices in post-order
@@ -33,9 +25,43 @@
  */
 
 /**
+ * You can define the edge field as a normal function and it will be called on each discovered edge with the
+ * `from` and `to` node numbers, as well as the edge type. Alternatively, yuou can also just set the field to an object.
+ *
+ * The function or object can have four optional fields, one for each edge type. These will be called on the discovery
+ * of their respective types. If you added these fields to a function, the main function will be called, in addition to these.
+ *
+ * @example
+ * // For each backedge
+ * DFS( nodes, {
+ *     edge: { back: ( from, to ) => console.log( `back edge from ${from} to ${to}` )
+ * // ... } );
+ *
+ * @example
+ * // For all edges and one just for tree edges
+ * function everyEdge( from, to, type )
+ * {
+ *     console.log( `Discovered ${type} edge from ${from} to ${to}` );
+ * }
+ *
+ * everyEdge.tree = ( from, to ) => console.log( `Discovered a tree edge from ${from} to ${to}` );
+ *
+ * DFS( nodes, {
+ *     edge: everyEdge
+ * // ... } );
+ *
+ * @typedef {function(number, number, type):*|Object} EdgeCB
+ * @property {function(number, number):*} [tree]        - Callback for each tree edge
+ * @property {function(number, number):*} [forward]     - Callback for each forward edge (not applicable for BFS)
+ * @property {function(number, number):*} [back]        - Callback for each back edge
+ * @property {function(number, number):*} [cross]       - Callback for each cross edge
+ */
+
+/**
  * Edges are categorized by type. For a DFS, the type is one of "tree", "forward", "back", or "cross".
  * BFS graphs do not have forward edges so the type is limited to one of "tree", "forward", or "cross".
  *
+ * @private
  * @typedef {object} Edge
  * @property {number} from
  * @property {number} to
@@ -59,6 +85,7 @@
  */
 
 /**
+ * @private
  * @typedef {object} DFSEdges
  * @property {Array<Edge>} tree
  * @property {Array<Edge>} forward
@@ -67,6 +94,7 @@
  */
 
 /**
+ * @private
  * @typedef {object} BFSEdges
  * @property {Array<Edge>} tree
  * @property {Array<Edge>} back
@@ -92,7 +120,7 @@ const
  * @param {function(number, number, string):*} add_edge
  * @param {Array<number>} state
  * @return {function(number):*}
- * @ignore
+ * @private
  */
 function make_dfs_walker( list, preOrder, postOrder, add_edge, state )
 {
@@ -135,7 +163,7 @@ function make_dfs_walker( list, preOrder, postOrder, add_edge, state )
  * @param {function(number, number, string):*} add_edge
  * @param {Array<number>} state
  * @return {function(number):*}
- * @ignore
+ * @private
  */
 function make_bfs_walker( list, preOrder, levels, add_edge, state )
 {
@@ -194,6 +222,12 @@ function make_bfs_walker( list, preOrder, levels, add_edge, state )
 
 
 /**
+ * A more involved traversal that's not as efficient as the simple walkers but provide more information.
+ * You can use this to generate pre-order, post-order (and their reverses) sequences, as well as edge
+ * information, all in a single pass.
+ *
+ * It does not provide levels which you need to get from the BFS traversal.
+ *
  * @param {Array<Array<number>>|TraversalOptions} list
  * @param {TraversalOptions} [opts]
  * @return {DFSTraversalResult}
@@ -204,6 +238,13 @@ function DFS( list, opts )
 }
 
 /**
+ * Much the same as the DFS function, it provides the same information and capabilities with a few exceptions.
+ *
+ * 1. It does not provide forward edge information.
+ * 2. It does not generate a post-order walk.
+ *
+ * It does, however, provides levels.
+ *
  * @param {Array<Array<number>>|TraversalOptions} list
  * @param {TraversalOptions} [opts]
  * @return {BFSTraversalResult}
@@ -214,11 +255,12 @@ function BFS( list, opts )
 }
 
 /**
- * @param {Array<Array<number>>} list
+ * @param {Array<Array<number>>|TraversalOptions} list
  * @param {TraversalOptions} [opts]
  * @param {function(number[][], number[], number[], function(number, number, string):*, number[]):function(number):*} _walker
  * @param {boolean} isBFS
  * @return {DFSTraversalResult|BFSTraversalResult}
+ * @private
  */
 function generic_walker( list, opts = defaultOptions, _walker, isBFS )
 {
@@ -226,6 +268,8 @@ function generic_walker( list, opts = defaultOptions, _walker, isBFS )
         opts.nodes = list;
     else if ( object( list ) )
         opts = Object.assign( defaultOptions, list );
+    else
+        opts = Object.assign( defaultOptions, { nodes: list, trusted: false } );
 
     list = opts.nodes;
 
@@ -307,4 +351,149 @@ function generic_walker( list, opts = defaultOptions, _walker, isBFS )
     return r;
 }
 
-module.exports = { DFS, BFS };
+/**
+ * Call this with the node list and a callback function. If the graph does not start at index `0` then
+ * add the actual start index as the third argument.
+ *
+ * @param {Array<Array<number>>} nodes
+ * @param {function(number, number, function):*} fn
+ * @param {number} [root=0]
+ */
+function preOrder( nodes, fn, root = 0 )
+{
+    if ( typeof fn !== 'function' )
+        throw new TypeError( "The callback must be a function" );
+
+    return prePostOrder( false, nodes, root, fn );
+}
+
+/**
+ * Call this with the node list and a callback function. If the graph does not start at index `0` then
+ * add the actual start index as the third argument.
+ *
+ * @param {Array<Array<number>>} nodes
+ * @param {function(number, number, function):*} fn
+ * @param {number} [root=0]
+ */
+function postOrder( nodes, fn, root = 0 )
+{
+    if ( typeof fn !== 'function' )
+        throw new TypeError( "The callback must be a function" );
+
+    return prePostOrder( true, nodes, root, fn );
+}
+
+/**
+ * @param {boolean} isPost
+ * @param {Array<Array<number>>} nodes
+ * @param {number} root
+ * @param {function(number, number, function):*} [cb]
+ * @private
+ */
+function reverseOrder( isPost, nodes, root, cb )
+{
+    let _stop = false,
+        rNode;
+
+    const
+        __stop = () => x => { _stop = true; if ( typeof x === 'number' ) rNode = x; },
+        defer  = [];
+
+    prePostOrder( isPost, nodes, root, n => defer.push( ( _fn, i ) => cb( rNode = n, i, _fn ) ) );
+
+    let _,
+        cnt = 0,
+        n   = defer.length;
+
+    for ( ; !_stop && n--; )
+        _stop = defer[ n ]( _ = __stop(), cnt++ ) === _ || _stop;
+
+    return rNode;
+}
+
+/**
+ * Call this with the node list and a callback function. If the graph does not start at index `0` then
+ * add the actual start index as the third argument.
+ *
+ * @param {Array<Array<number>>} nodes
+ * @param {function(number, number, function):*} fn
+ * @param {number} [root=0]
+ */
+function rPreOrder( nodes, fn, root = 0 )
+{
+    if ( typeof fn !== 'function' )
+        throw new TypeError( "The callback must be a function" );
+
+
+    return reverseOrder( false, nodes, root, fn );
+}
+
+/**
+ * Call this with the node list and a callback function. If the graph does not start at index `0` then
+ * add the actual start index as the third argument.
+ *
+ * @param {Array<Array<number>>} nodes
+ * @param {function(number, number, function):*} fn
+ * @param {number} [root=0]
+ */
+function rPostOrder( nodes, fn, root = 0 )
+{
+    if ( typeof fn !== 'function' )
+        throw new TypeError( "The callback must be a function" );
+
+    return reverseOrder( true, nodes, root, fn );
+}
+
+/**
+ * @param {boolean} isPost
+ * @param {Array<Array<number>>} nodes
+ * @param {number} root
+ * @param {function(number, number, function):*} [fn]
+ * @private
+ */
+function prePostOrder( isPost, nodes, root, fn )
+{
+    let preNumber = 0,
+        abort     = false,
+        rNode;
+
+    const
+        isPre = !isPost,
+        _v    = [];
+
+    /**
+     * @param {number} u
+     * @ignore
+     */
+    function __dfs( u )
+    {
+
+        /** */
+        function __abort( rn = u )
+        {
+            if ( abort !== true ) rNode = rn;
+            return abort = true;
+        }
+
+        if ( isPre && ( fn( u, preNumber++, __abort ) === __abort || abort ) )
+            return __abort( u );
+
+        for ( const v of nodes[ u ] )
+        {
+            if ( _v[ v ] !== true )
+            {
+                _v[ v ] = true;
+                if ( __dfs( v ) ) return true;
+            }
+        }
+
+        if ( isPost && ( fn( u, preNumber++, __abort ) === __abort || abort ) )
+            return __abort( u );
+    }
+
+    __dfs( root );
+
+    return rNode;
+}
+
+module.exports = { DFS, BFS, preOrder, postOrder, rPreOrder, rPostOrder };

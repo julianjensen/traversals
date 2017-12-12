@@ -7,7 +7,7 @@
 "use strict";
 
 const
-    testGraphVisual    = `          ┌─────────┐
+    testGraphVisual                                          = `          ┌─────────┐
 ┌─────────┤ START 0 │
 │         └────┬────┘
 │              │
@@ -48,9 +48,9 @@ const
 └────────>│  EXIT 8 │
           └─────────┘
 `,
-    expect             = require( 'chai' ).expect,
-    { DFS, BFS }       = require( '../index' ),
-    testGraph          = [
+    expect                                                   = require( 'chai' ).expect,
+    { DFS, BFS, preOrder, postOrder, rPreOrder, rPostOrder } = require( '../index' ),
+    testGraph                                                = [
         [ 1, 8 ],    // start
         [ 2, 3 ],    // a
         [ 3 ],       // b
@@ -61,7 +61,7 @@ const
         [ 8 ],       // g
         []           // end
     ],
-    irregularTestGraph = [
+    irregularTestGraph                                       = [
         [ 1, 8 ],    // start
         [ 2, 3 ],    // a
         3,       // b
@@ -72,7 +72,7 @@ const
         [ 8 ],       // g
         void 0           // end
     ],
-    bfsBackedge        = [
+    bfsBackedge                                              = [
         [ 1, 8 ],    // start
         [ 2, 3 ],    // a
         [ 3 ],       // b
@@ -83,8 +83,9 @@ const
         [ 8 ],       // g
         []           // end
     ],
-    correctPreOrder    = [ 0, 1, 2, 3, 4, 6, 7, 8, 5 ],
-    correctPostOrder   = [ 8, 7, 6, 4, 5, 3, 2, 1, 0 ];
+    correctPreOrder                                          = [ 0, 1, 2, 3, 4, 6, 7, 8, 5 ],
+    correctPostOrder                                         = [ 8, 7, 6, 4, 5, 3, 2, 1, 0 ],
+    incSeq                                                   = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
 
 
 describe( 'traversals', function() {
@@ -110,9 +111,22 @@ describe( 'traversals', function() {
             expect( DFS.bind( null ) ).to.throw;
         } );
 
+        it( 'should walk a walk with a non-object', () => {
+            const
+                result = DFS( testGraph, 'definitely-not-an-object' );
+
+            expect( result ).to.be.an( 'object' );
+            expect( result.preOrder ).to.be.an( 'array' );
+            expect( result.postOrder ).to.be.an( 'array' );
+            expect( result.preOrder ).to.eql( correctPreOrder );
+            expect( result.postOrder ).to.eql( correctPostOrder );
+            expect( result ).to.not.have.property( 'rPreOrder' );
+            expect( result ).to.not.have.property( 'rPostOrder' );
+        } );
+
         it( 'should return reverse orders if requested', () => {
             const
-                result = DFS( testGraph, { preOrder: false, postOrder: false, rPreOrder: true, rPostOrder: true } );
+                result = DFS( testGraph, { preOrder: false, postOrder: false, rPreOrder: true, rPostOrder: true, trusted: true } );
 
             expect( result ).to.not.have.property( 'preOrder' );
             expect( result ).to.not.have.property( 'postOrder' );
@@ -156,12 +170,13 @@ describe( 'traversals', function() {
             allEdges.back = ( from, to ) => back.push( [ min( from, to ), max( from, to ) ] );
             allEdges.cross = ( from, to ) => cross.push( [ min( from, to ), max( from, to ) ] );
 
-            DFS( irregularTestGraph, {
+            DFS( {
+                nodes: irregularTestGraph,
                 pre( n ) { cbPre.push( n ); },
                 rpre( n ) { cbrPre.push( n ); },
                 post( n ) { cbPost.push( n ); },
                 rpost( n ) { cbrPost.push( n ); },
-                edge: allEdges
+                edge:  allEdges
             } );
 
             expect( cbPre ).to.eql( correctPreOrder );
@@ -203,6 +218,31 @@ describe( 'traversals', function() {
             expect( DFS.bind( null, { nodes: 'blah', startIndex: -irregularTestGraph.length } ) ).to.throw( TypeError );
 
         } );
+
+        it( 'should walk with an odd start', () => {
+            const
+                offsetTestGraph = [
+                    [ 1, 2 ],    // a
+                    [ 2 ],       // b
+                    [ 3, 4 ],    // c
+                    [ 5 ],       // d
+                    [ 6 ],       // e
+                    [ 6, 1 ],    // f
+                    [ 7 ],       // g
+                    [],           // end
+                    [ 0, 7 ]    // start
+                ],
+                result          = DFS( testGraph, { preOrder: true, postOrder: true, startIndex: offsetTestGraph.length - 1 } );
+
+            expect( result ).to.be.an( 'object' );
+            expect( result.preOrder ).to.be.an( 'array' );
+            expect( result.postOrder ).to.be.an( 'array' );
+            expect( result.preOrder ).to.eql( [ 8, 0, 1, 2, 3, 4, 6, 7, 5 ] );
+            expect( result.postOrder ).to.eql( correctPostOrder );
+            expect( result ).to.not.have.property( 'rPreOrder' );
+            expect( result ).to.not.have.property( 'rPostOrder' );
+
+        } );
     } );
 
     describe( 'BFS', function() {
@@ -240,4 +280,236 @@ describe( 'traversals', function() {
         } );
 
     } );
+
+    describe( 'simple pre-order traversals', function() {
+
+        it( 'needs a function', () => {
+            expect( preOrder.bind( null, testGraph ) ).to.throw( TypeError );
+        } );
+
+        it( 'should do a quick pre-order traversal', () => {
+            const
+                genIncSeq = [],
+                preSeq    = [];
+
+            preOrder( testGraph, ( nodeNum, preNum ) => {
+                preSeq.push( nodeNum );
+                genIncSeq.push( preNum );
+            } );
+
+            expect( preSeq ).to.eql( [ 0, 1, 2, 3, 4, 6, 7, 8, 5 ] );
+            expect( genIncSeq ).to.eql( incSeq );
+        } );
+
+        it( 'should be able to abort a pre-order walk with a special return value', () => {
+            const
+                preSeq = [];
+
+            let returnValue = preOrder( testGraph, ( nodeNum, index, kill ) => {
+                preSeq.push( nodeNum );
+                return nodeNum === 3 && kill;
+            } );
+
+            expect( preSeq ).to.eql( [ 0, 1, 2, 3 ] );
+            expect( returnValue ).to.equal( 3 );
+        } );
+
+        it( 'should be able to abort a pre-order walk with a special function, optionally returning a value', () => {
+
+            let returnValue,
+                preSeq = [];
+
+            returnValue = preOrder( testGraph, ( nodeNum, index, kill ) => {
+                preSeq.push( nodeNum );
+                nodeNum === 4 && kill();
+            }, 0 );
+            expect( preSeq ).to.eql( [ 0, 1, 2, 3, 4 ] );
+            expect( returnValue ).to.equal( 4 );
+
+            preSeq.length = 0;
+
+            returnValue = preOrder( testGraph, ( nodeNum, index, kill ) => {
+                preSeq.push( nodeNum );
+                nodeNum === 3 && kill( 1 );
+            } );
+            expect( preSeq ).to.eql( [ 0, 1, 2, 3 ] );
+            expect( returnValue ).to.equal( 1 );
+        } );
+
+    } );
+
+    describe( 'simple post-order traversals', function() {
+
+        it( 'needs a function', () => {
+            expect( postOrder.bind( null, testGraph ) ).to.throw( TypeError );
+        } );
+
+        it( 'should do a quick post-order traversal', () => {
+            const
+                incSeq    = testGraph.map( ( _, i ) => i ),
+                genIncSeq = [],
+                postSeq   = [];
+
+            postOrder( testGraph, ( nodeNum, postNum ) => {
+                postSeq.push( nodeNum );
+                genIncSeq.push( postNum );
+            } );
+
+            expect( postSeq ).to.eql( [ 8, 7, 6, 4, 5, 3, 2, 1, 0 ] );
+            expect( genIncSeq ).to.eql( incSeq );
+        } );
+
+        it( 'should be able to abort a post-order walk with a special return value', () => {
+            const
+                postSeq = [];
+
+            let returnValue = postOrder( testGraph, ( nodeNum, index, kill ) => {
+                postSeq.push( nodeNum );
+                return nodeNum === 4 && kill;
+            }, 0 );
+
+            expect( postSeq ).to.eql( [ 8, 7, 6, 4 ] );
+            expect( returnValue ).to.equal( 4 );
+        } );
+
+        it( 'should be able to abort a post-order walk with a special function, optionally returning a value', () => {
+
+            let returnValue,
+                postSeq = [];
+
+            returnValue = postOrder( testGraph, ( nodeNum, index, kill ) => {
+                postSeq.push( nodeNum );
+                nodeNum === 4 && kill();
+            } );
+            expect( postSeq ).to.eql( [ 8, 7, 6, 4 ] );
+            expect( returnValue ).to.equal( 4 );
+
+            postSeq.length = 0;
+
+            returnValue = postOrder( testGraph, ( nodeNum, index, kill ) => {
+                postSeq.push( nodeNum );
+                nodeNum === 3 && kill( 1 );
+            } );
+            expect( postSeq ).to.eql( [ 8, 7, 6, 4, 5, 3 ] );
+            expect( returnValue ).to.equal( 1 );
+        } );
+
+    } );
+
+    describe( 'simple reverse pre-order traversals', function() {
+
+        it( 'needs a function', () => {
+            expect( rPreOrder.bind( null, testGraph ) ).to.throw( TypeError );
+        } );
+
+        it( 'should do a quick reverse pre-order traversal', () => {
+            const
+                incSeq    = testGraph.map( ( _, i ) => i ),
+                genIncSeq = [],
+                preSeq    = [];
+
+            rPreOrder( testGraph, ( nodeNum, preNum ) => {
+                preSeq.push( nodeNum );
+                genIncSeq.push( preNum );
+            } );
+
+            expect( preSeq ).to.eql( [ 5, 8, 7, 6, 4, 3, 2, 1, 0 ] );
+            expect( genIncSeq ).to.eql( incSeq );
+        } );
+
+        it( 'should be able to abort a reverse pre-order walk with a special return value', () => {
+            const
+                preSeq = [];
+
+            let returnValue = rPreOrder( testGraph, ( nodeNum, index, kill ) => {
+                preSeq.push( nodeNum );
+                return nodeNum === 3 && kill;
+            }, 0 );
+
+            expect( preSeq ).to.eql( [ 5, 8, 7, 6, 4, 3 ] );
+            expect( returnValue ).to.equal( 3 );
+        } );
+
+        it( 'should be able to abort a reverse pre-order walk with a special function, optionally returning a value', () => {
+
+            let returnValue,
+                preSeq = [];
+
+            returnValue = rPreOrder( testGraph, ( nodeNum, index, kill ) => {
+                preSeq.push( nodeNum );
+                if ( nodeNum === 4 ) kill();
+            } );
+            expect( preSeq ).to.eql( [ 5, 8, 7, 6, 4 ] );
+            expect( returnValue ).to.equal( 4 );
+
+            preSeq.length = 0;
+
+            returnValue = rPreOrder( testGraph, ( nodeNum, index, kill ) => {
+                preSeq.push( nodeNum );
+                if ( nodeNum === 3 ) kill( 1 );
+            } );
+            expect( preSeq ).to.eql( [ 5, 8, 7, 6, 4, 3 ] );
+            expect( returnValue ).to.equal( 1 );
+        } );
+
+    } );
+
+    describe( 'simple reverse post-order traversals', function() {
+
+        it( 'needs a function', () => {
+            expect( rPostOrder.bind( null, testGraph ) ).to.throw( TypeError );
+        } );
+
+        it( 'should do a quick reverse post-order traversal', () => {
+            const
+                incSeq    = testGraph.map( ( _, i ) => i ),
+                genIncSeq = [],
+                postSeq   = [];
+
+            rPostOrder( testGraph, ( nodeNum, postNum ) => {
+                postSeq.push( nodeNum );
+                genIncSeq.push( postNum );
+            } );
+
+            expect( postSeq ).to.eql( [ 0, 1, 2, 3, 5, 4, 6, 7, 8 ] );
+            expect( genIncSeq ).to.eql( incSeq );
+        } );
+
+        it( 'should be able to abort a reverse post-order walk with a special return value', () => {
+            const
+                postSeq = [];
+
+            let returnValue = rPostOrder( testGraph, ( nodeNum, index, kill ) => {
+                postSeq.push( nodeNum );
+                return nodeNum === 3 && kill;
+            }, 0 );
+
+            expect( postSeq ).to.eql( [ 0, 1, 2, 3 ] );
+            expect( returnValue ).to.equal( 3 );
+        } );
+
+        it( 'should be able to abort a reverse post-order walk with a special function, optionally returning a value', () => {
+
+            let returnValue,
+                postSeq = [];
+
+            returnValue = rPostOrder( testGraph, ( nodeNum, index, kill ) => {
+                postSeq.push( nodeNum );
+                if ( nodeNum === 4 ) kill();
+            } );
+            expect( postSeq ).to.eql( [ 0, 1, 2, 3, 5, 4 ] );
+            expect( returnValue ).to.equal( 4 );
+
+            postSeq.length = 0;
+
+            returnValue = rPostOrder( testGraph, ( nodeNum, index, kill ) => {
+                postSeq.push( nodeNum );
+                if ( nodeNum === 3 ) kill( 1 );
+            } );
+            expect( postSeq ).to.eql( [ 0, 1, 2, 3 ] );
+            expect( returnValue ).to.equal( 1 );
+        } );
+
+    } );
+
 } );
