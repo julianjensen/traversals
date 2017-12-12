@@ -132,7 +132,7 @@ function make_dfs_walker( list, preOrder, postOrder, add_edge, state )
      * @param {number} u
      * @ignore
      */
-    return function __dfs( u ) {
+    function __dfs( u ) {
         preNumber[ u ] = preOrder.length;
         preOrder.push( u );
 
@@ -153,6 +153,11 @@ function make_dfs_walker( list, preOrder, postOrder, add_edge, state )
 
         state[ u ] = 2;
         postOrder.push( u );
+    }
+
+    return u => {
+        visit( u );
+        return __dfs( u );
     };
 }
 
