@@ -16,6 +16,7 @@
  * @property {function(number):boolean} [rpost] - Callback in reverse post-order
  * @property {EdgeCB} [edge]                    - Callback for every edge or each type, see `EdgeCB` below
  * @property {boolean} [spanningTree=true]      - A strongly connected graph with all nodes reachable from a common root
+ * @property {boolean} [excludeRoot=false]      - Do not invoke a callback for the root node
  * @property {boolean} [preOrder=true]          - Return an array of node indices in pre-order
  * @property {boolean} [postOrder=true]         - Return an array of node indices in post-order
  * @property {boolean} [rPreOrder=false]        - Return an array of node indices in reverse pre-order
@@ -193,7 +194,7 @@ function make_bfs_walker( list, preOrder, levels, add_edge, state )
     }
 
     /**
-     * @param {number} u
+     * @param {number} s
      * @ignore
      */
     return function __bfs( s ) {
@@ -305,8 +306,11 @@ function generic_walker( list, opts = defaultOptions, _walker, isBFS )
         };
     }
 
+    let currentRoot = opts.startIndex;
+
     const
-        callback  = ( fn, ...args ) => isFn( fn ) && fn( ...args ),
+        callback  = ( fn, ...args ) => isFn( fn ) && ( !opts.excludeRoot || args[ 0 ] !== currentRoot ) && fn( ...args ),
+        // callback  = ( fn, ...args ) => isFn( fn ) && ( !opts.excludeRoot || args[ 0 ] !== currentRoot ) && fn( ...args ),
 
         add_edge  = ( from, to, type ) => {
             if ( opts.edges )
@@ -336,7 +340,7 @@ function generic_walker( list, opts = defaultOptions, _walker, isBFS )
 
         while ( index !== last )
         {
-            if ( !state[ index ] ) walker( index );
+            if ( !state[ index ] ) walker( currentRoot  = index );
             index = ( index + 1 ) % numNodes;
         }
     }

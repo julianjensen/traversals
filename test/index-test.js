@@ -111,6 +111,19 @@ describe( 'traversals', function() {
             expect( DFS.bind( null ) ).to.throw;
         } );
 
+        it( 'should exclude the root from callbacks if asked', () => {
+            let seenIt = false;
+
+            const
+                po = DFS( testGraph, {
+                    pre: n => n === 0 && ( seenIt = true ),
+                    preOrder: true, excludeRoot: true
+                } ).preOrder;
+
+            expect( seenIt ).to.be.false;
+            expect( po ).to.eql( [ 0, 1, 2, 3, 4, 6, 7, 8, 5 ] );
+        } );
+
         it( 'should walk a walk with a non-object', () => {
             const
                 result = DFS( testGraph, 'definitely-not-an-object' );
