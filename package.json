@@ -1,6 +1,6 @@
 {
     "name": "traversals",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "description": "Small module for graph traversals, supporting DFS and BFS with niceties added for pre- and post-order, including their reverses.",
     "main": "index.js",
     "scripts": {
