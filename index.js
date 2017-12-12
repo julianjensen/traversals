@@ -266,10 +266,10 @@ function generic_walker( list, opts = defaultOptions, _walker, isBFS )
             callback( opts.edge, from, to, type );
             callback( opts.edge && opts.edge[ type ], from, to );
         },
-        pre       = n => callback( opts.pre, n ),
-        post      = n => callback( opts.post, n ),
-        rpre      = n => callback( opts.rpre, n ),
-        rpost     = n => callback( opts.rpost, n ),
+        pre       = ( n, i, a ) => callback( opts.pre, n, i, a ),
+        post      = ( n, i, a ) => callback( opts.post, n, i, a ),
+        rpre      = ( n, i, a ) => callback( opts.rpre, n, i, a ),
+        rpost     = ( n, i, a ) => callback( opts.rpost, n, i, a ),
 
         postOrder = [],
         preOrder  = [],
