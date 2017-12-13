@@ -310,7 +310,6 @@ function generic_walker( list, opts = defaultOptions, _walker, isBFS )
 
     const
         callback  = ( fn, ...args ) => isFn( fn ) && ( !opts.excludeRoot || args[ 0 ] !== currentRoot ) && fn( ...args ),
-        // callback  = ( fn, ...args ) => isFn( fn ) && ( !opts.excludeRoot || args[ 0 ] !== currentRoot ) && fn( ...args ),
 
         add_edge  = ( from, to, type ) => {
             if ( opts.edges )
