@@ -71,7 +71,6 @@ DFS( someGraph, { edge: { tree: ( from, to ) => console.log( `tree from ${from} 
 ```
 
 ## API
-
 ## Functions
 
 <dl>
@@ -126,7 +125,7 @@ of their respective types. If you added these fields to a function, the main fun
 
 <a name="DFS"></a>
 
-## DFS(list, [opts]) ⇒ [<code>DFSTraversalResult</code>](tmp.md#DFSTraversalResult)
+## DFS(list, [opts]) ⇒ [<code>DFSTraversalResult</code>](#DFSTraversalResult)
 A more involved traversal that's not as efficient as the simple walkers but provide more information.
 You can use this to generate pre-order, post-order (and their reverses) sequences, as well as edge
 information, all in a single pass.
@@ -137,12 +136,12 @@ It does not provide levels which you need to get from the BFS traversal.
 
 | Param | Type |
 | --- | --- |
-| list | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> \| [<code>TraversalOptions</code>](tmp.md#TraversalOptions) | 
-| [opts] | [<code>TraversalOptions</code>](tmp.md#TraversalOptions) | 
+| list | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> \| [<code>TraversalOptions</code>](#TraversalOptions) | 
+| [opts] | [<code>TraversalOptions</code>](#TraversalOptions) | 
 
 <a name="BFS"></a>
 
-## BFS(list, [opts]) ⇒ [<code>BFSTraversalResult</code>](tmp.md#BFSTraversalResult)
+## BFS(list, [opts]) ⇒ [<code>BFSTraversalResult</code>](#BFSTraversalResult)
 Much the same as the DFS function, it provides the same information and capabilities with a few exceptions.
 
 1. It does not provide forward edge information.
@@ -154,8 +153,8 @@ It does, however, provides levels.
 
 | Param | Type |
 | --- | --- |
-| list | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> \| [<code>TraversalOptions</code>](tmp.md#TraversalOptions) | 
-| [opts] | [<code>TraversalOptions</code>](tmp.md#TraversalOptions) | 
+| list | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> \| [<code>TraversalOptions</code>](#TraversalOptions) | 
+| [opts] | [<code>TraversalOptions</code>](#TraversalOptions) | 
 
 <a name="preOrder"></a>
 
@@ -227,8 +226,10 @@ add the actual start index as the third argument.
 | post | <code>function</code> |  | Callback in post-order |
 | rpre | <code>function</code> |  | Callback in reverse pre-order |
 | rpost | <code>function</code> |  | Callback in reverse post-order |
-| edge | [<code>EdgeCB</code>](tmp.md#EdgeCB) |  | Callback for every edge or each type, see `EdgeCB` below |
+| edge | [<code>EdgeCB</code>](#EdgeCB) |  | Callback for every edge or each type, see `EdgeCB` below |
 | spanningTree | <code>boolean</code> | <code>true</code> | A strongly connected graph with all nodes reachable from a common root |
+| flat | <code>boolean</code> | <code>false</code> | Use an iterative walker, not recursive |
+| excludeRoot | <code>boolean</code> | <code>false</code> | Do not invoke a callback for the root node |
 | preOrder | <code>boolean</code> | <code>true</code> | Return an array of node indices in pre-order |
 | postOrder | <code>boolean</code> | <code>true</code> | Return an array of node indices in post-order |
 | rPreOrder | <code>boolean</code> | <code>false</code> | Return an array of node indices in reverse pre-order |
@@ -303,29 +304,3 @@ DFS( nodes, {
 | levels | <code>Array.&lt;number&gt;</code> | 
 | edges | <code>BFSEdges</code> | 
 
-
-## License
-
-MIT © [Julian Jensen](https://github.com/julianjensen/traversals)
-
-
-[coveralls-url]: https://coveralls.io/github/julianjensen/traversals?branch=master
-[coveralls-image]: https://coveralls.io/repos/github/julianjensen/traversals/badge.svg?branch=master
-
-[travis-url]: https://travis-ci.org/julianjensen/traversals
-[travis-image]: http://img.shields.io/travis/julianjensen/traversals.svg
-
-[depstat-url]: https://gemnasium.com/github.com/julianjensen/traversals
-[depstat-image]: https://gemnasium.com/badges/github.com/julianjensen/traversals.svg
-
-[npm-url]: https://badge.fury.io/js/traversals
-[npm-image]: https://badge.fury.io/js/traversals.svg
-
-[license-url]: https://github.com/julianjensen/dominators/blob/master/LICENSE
-[license-image]: https://img.shields.io/badge/license-MIT-brightgreen.svg
-
-[snyk-url]: https://snyk.io/test/github/julianjensen/traversals
-[snyk-image]: https://snyk.io/test/github/julianjensen/traversals/badge.svg
-
-[david-dm-url]: https://david-dm.org/julianjensen/traversals
-[david-dm-image]: https://david-dm.org/julianjensen/traversals.svg
