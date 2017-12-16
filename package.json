@@ -14,7 +14,7 @@
         "minor": "npm version minor && npm publish",
         "major": "npm version major && npm publish",
         "postpublish": "git push origin master --follow-tags",
-        "toc": "doctoc --github --title \"# Changelog\" CHANGELOG.md"
+        "version": "auto-changelog -p -l 10 && git add CHANGELOG.md"
     },
     "repository": "https://github.com/julianjensen/traversals.git",
     "keywords": [
@@ -37,6 +37,7 @@
     },
     "homepage": "https://github.com/julianjensen/traversals#readme",
     "devDependencies": {
+        "auto-changelog": "^1.2.2",
         "chai": "^4.1.1",
         "coveralls": "^2.13.3",
         "dependency-check": "^2.5.1",
