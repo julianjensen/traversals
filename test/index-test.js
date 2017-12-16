@@ -7,7 +7,7 @@
 "use strict";
 
 const
-    testGraphVisual                                          = `          ┌─────────┐
+    testGraphVisual    = `          ┌─────────┐
 ┌─────────┤ START 0 │
 │         └────┬────┘
 │              │
@@ -48,9 +48,16 @@ const
 └────────>│  EXIT 8 │
           └─────────┘
 `,
-    expect                                                   = require( 'chai' ).expect,
-    { DFS, BFS, preOrder, postOrder, rPreOrder, rPostOrder } = require( '../index' ),
-    testGraph                                                = [
+    expect             = require( 'chai' ).expect,
+    {
+        DFS,
+        BFS,
+        preOrder,
+        postOrder,
+        rPreOrder,
+        rPostOrder
+    }                  = require( '../index' ),
+    testGraph          = [
         [ 1, 8 ],    // start
         [ 2, 3 ],    // a
         [ 3 ],       // b
@@ -61,7 +68,7 @@ const
         [ 8 ],       // g
         []           // end
     ],
-    irregularTestGraph                                       = [
+    irregularTestGraph = [
         [ 1, 8 ],    // start
         [ 2, 3 ],    // a
         3,       // b
@@ -72,7 +79,7 @@ const
         [ 8 ],       // g
         void 0           // end
     ],
-    bfsBackedge                                              = [
+    bfsBackedge        = [
         [ 1, 8 ],    // start
         [ 2, 3 ],    // a
         [ 3 ],       // b
@@ -83,9 +90,9 @@ const
         [ 8 ],       // g
         []           // end
     ],
-    correctPreOrder                                          = [ 0, 1, 2, 3, 4, 6, 7, 8, 5 ],
-    correctPostOrder                                         = [ 8, 7, 6, 4, 5, 3, 2, 1, 0 ],
-    incSeq                                                   = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
+    correctPreOrder    = [ 0, 1, 2, 3, 4, 6, 7, 8, 5 ],
+    correctPostOrder   = [ 8, 7, 6, 4, 5, 3, 2, 1, 0 ],
+    incSeq             = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
 
 
 describe( 'traversals', function() {
@@ -106,6 +113,41 @@ describe( 'traversals', function() {
             expect( result ).to.not.have.property( 'rPostOrder' );
         } );
 
+        it( 'traverse a graph without callbacks without recursion', () => {
+            const
+                result = DFS( testGraph, { preOrder: true, postOrder: true, edges: true, flat: true } );
+
+            expect( result ).to.be.an( 'object' );
+            expect( result.preOrder ).to.be.an( 'array' );
+            expect( result.postOrder ).to.be.an( 'array' );
+            expect( result.preOrder ).to.eql( correctPreOrder );
+            expect( result.postOrder ).to.eql( correctPostOrder );
+            expect( result ).to.not.have.property( 'rPreOrder' );
+            expect( result ).to.not.have.property( 'rPostOrder' );
+            expect( result.edges ).to.be.an( 'object' );
+            expect( result.edges.tree ).to.be.an( 'array' );
+            expect( result.edges.back ).to.be.an( 'array' );
+            expect( result.edges.forward ).to.be.an( 'array' );
+            expect( result.edges.cross ).to.be.an( 'array' );
+
+            const { tree, back, forward, cross } = result.edges;
+
+            expect( tree ).to.eql( [
+                [ 0, 1 ],
+                [ 1, 2 ],
+                [ 2, 3 ],
+                [ 3, 4 ],
+                [ 4, 6 ],
+                [ 6, 7 ],
+                [ 7, 8 ],
+                [ 3, 5 ]
+            ] );
+            expect( back ).to.eql( [ [ 6, 2 ] ] );
+            expect( forward ).to.eql( [ [ 1, 3 ], [ 0, 8 ] ] );
+            expect( cross ).to.eql( [ [ 5, 6 ] ] );
+
+        } );
+
         it( 'should expect an array for the graph argument', () => {
             expect( DFS.bind( null, 'hello' ) ).to.throw;
             expect( DFS.bind( null ) ).to.throw;
@@ -116,7 +158,7 @@ describe( 'traversals', function() {
 
             const
                 po = DFS( testGraph, {
-                    pre: n => n === 0 && ( seenIt = true ),
+                    pre:      n => n === 0 && ( seenIt = true ),
                     preOrder: true, excludeRoot: true
                 } ).preOrder;
 
@@ -165,8 +207,6 @@ describe( 'traversals', function() {
 
         it( 'should fire callbacks', () => {
             const
-                min      = ( a, b ) => a < b ? a : b,
-                max      = ( a, b ) => a > b ? a : b,
                 cbPre    = [],
                 cbPost   = [],
                 cbrPre   = [],
@@ -178,10 +218,10 @@ describe( 'traversals', function() {
                 cross    = [],
                 allEdges = ( from, to, type ) => type === 'tree' && seen[ to ]++;
 
-            allEdges.tree = ( from, to ) => tree.push( [ min( from, to ), max( from, to ) ] );
-            allEdges.forward = ( from, to ) => forward.push( [ min( from, to ), max( from, to ) ] );
-            allEdges.back = ( from, to ) => back.push( [ min( from, to ), max( from, to ) ] );
-            allEdges.cross = ( from, to ) => cross.push( [ min( from, to ), max( from, to ) ] );
+            allEdges.tree    = ( from, to ) => tree.push( [ from, to ] );
+            allEdges.forward = ( from, to ) => forward.push( [ from, to ] );
+            allEdges.back    = ( from, to ) => back.push( [ from, to ] );
+            allEdges.cross   = ( from, to ) => cross.push( [ from, to ] );
 
             DFS( {
                 nodes: irregularTestGraph,
@@ -208,7 +248,7 @@ describe( 'traversals', function() {
                 [ 7, 8 ],
                 [ 3, 5 ]
             ] );
-            expect( back ).to.eql( [ [ 2, 6 ] ] );
+            expect( back ).to.eql( [ [ 6, 2 ] ] );
             expect( forward ).to.eql( [ [ 1, 3 ], [ 0, 8 ] ] );
             expect( cross ).to.eql( [ [ 5, 6 ] ] );
         } );

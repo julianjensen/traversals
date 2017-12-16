@@ -8,7 +8,7 @@
 
 /**
  * @typedef {object} TraversalOptions
- * @property {Array<Array<number>>} nodes       - Optionally, you can put your array of nodes here
+ * @property {Array<Array<number>>} [nodes]     - Optionally, you can put your array of nodes here
  * @property {number} [startIndex=0]            - Where to start, defaults to zero
  * @property {function(number):boolean} [pre]   - Callback in pre-order
  * @property {function(number):boolean} [post]  - Callback in post-order
@@ -16,6 +16,7 @@
  * @property {function(number):boolean} [rpost] - Callback in reverse post-order
  * @property {EdgeCB} [edge]                    - Callback for every edge or each type, see `EdgeCB` below
  * @property {boolean} [spanningTree=true]      - A strongly connected graph with all nodes reachable from a common root
+ * @property {boolean} [flat=false]             - Use an iterative walker, not recursive
  * @property {boolean} [excludeRoot=false]      - Do not invoke a callback for the root node
  * @property {boolean} [preOrder=true]          - Return an array of node indices in pre-order
  * @property {boolean} [postOrder=true]         - Return an array of node indices in post-order
@@ -133,7 +134,8 @@ function make_dfs_walker( list, preOrder, postOrder, add_edge, state )
      * @param {number} u
      * @ignore
      */
-    function __dfs( u ) {
+    function __dfs( u )
+    {
         preNumber[ u ] = preOrder.length;
         preOrder.push( u );
 
@@ -161,6 +163,75 @@ function make_dfs_walker( list, preOrder, postOrder, add_edge, state )
         return __dfs( u );
     };
 }
+
+/**
+ * @param {Array<Array<number>>} list
+ * @param {Array<number>} preOrder
+ * @param {Array<number>} postOrder
+ * @param {function(number, number, string):*} add_edge
+ * @param {Array<number>} state
+ * @return {function(number):*}
+ * @private
+ */
+function make_flat_dfs_walker( list, preOrder, postOrder, add_edge, state )
+{
+    return start => {
+        const
+            parent = [],
+            enter  = [],
+            exit   = [],
+            queue  = [];
+
+        let time = 0;
+
+        queue.push( [ start, null ] );
+        preOrder.push( start );
+
+        while ( queue.length )
+        {
+            const [ u, p ] = queue.pop();
+
+            if ( u < 0 )
+            {
+                exit[ p ] = time++;
+                postOrder.push( p );
+                continue;
+            }
+
+            if ( !parent[ u ] && p !== null )
+            {
+                preOrder.push( u );
+                parent[ u ] = p;
+                add_edge( p, u, 'tree' );
+            }
+            else if ( p !== null )
+                add_edge( p, u, 'forward' );
+
+            if ( state[ u ] ) continue;
+
+            enter[ u ] = time++;
+            state[ u ] = true;
+
+            queue.push( [ -u - 1, u ] );
+
+            const children = list[ u ].slice().reverse();
+
+            for ( const v of children )
+            {
+                if ( !state[ v ] )
+                    queue.push( [ v, u ] );
+                else
+                {
+                    if ( !exit[ u ] && !exit[ v ] )
+                        add_edge( u, v, 'back' );
+                    else    // else if ( !exit[ u ] )
+                        add_edge( u, v, 'cross' );
+                }
+            }
+        }
+    };
+}
+
 
 /**
  * @param {Array<Array<number>>} list
@@ -215,7 +286,7 @@ function make_bfs_walker( list, preOrder, levels, add_edge, state )
                     state[ w ] = 2;
 
                     parents[ w ] = v;
-                    levels[ w ] = levels[ v ] + 1;
+                    levels[ w ]  = levels[ v ] + 1;
                     add_edge( v, w, 'tree' );
                     queue.push( w );
                 }
@@ -240,7 +311,7 @@ function make_bfs_walker( list, preOrder, levels, add_edge, state )
  */
 function DFS( list, opts )
 {
-    return generic_walker( list, opts, make_dfs_walker, false );
+    return generic_walker( list, opts, object( opts ) && opts.flat ? make_flat_dfs_walker : make_dfs_walker, false );
 }
 
 /**
@@ -287,7 +358,7 @@ function generic_walker( list, opts = defaultOptions, _walker, isBFS )
     if ( !opts.trusted )
     {
         if ( !array( list ) ) throw new TypeError( `The list of nodes must be an array` );
-        list = list.map( e => array( e ) ? e : typeof e === 'number' ? [ e ] : [] );
+        list            = list.map( e => array( e ) ? e : typeof e === 'number' ? [ e ] : [] );
         opts.startIndex = opts.startIndex % numNodes;
     }
 
@@ -339,7 +410,7 @@ function generic_walker( list, opts = defaultOptions, _walker, isBFS )
 
         while ( index !== last )
         {
-            if ( !state[ index ] ) walker( currentRoot  = index );
+            if ( !state[ index ] ) walker( currentRoot = index );
             index = ( index + 1 ) % numNodes;
         }
     }
@@ -404,7 +475,10 @@ function reverseOrder( isPost, nodes, root, cb )
         rNode;
 
     const
-        __stop = () => x => { _stop = true; if ( typeof x === 'number' ) rNode = x; },
+        __stop = () => x => {
+            _stop = true;
+            if ( typeof x === 'number' ) rNode = x;
+        },
         defer  = [];
 
     prePostOrder( isPost, nodes, root, n => defer.push( ( _fn, i ) => cb( rNode = n, i, _fn ) ) );
@@ -505,3 +579,152 @@ function prePostOrder( isPost, nodes, root, fn )
 }
 
 module.exports = { DFS, BFS, preOrder, postOrder, rPreOrder, rPostOrder };
+
+// function qdfs( list )
+// {
+//     const
+//         parent = [],
+//         enter = [],
+//         exit = [],
+//         queue = [],
+//         discovery = [],
+//         _v = [],
+//         edges = {
+//             tree: [],
+//             back: [],
+//             forward: [],
+//             cross: [],
+//             info: []
+//         },
+//         raw = [];
+//
+//     let time = 0;
+//
+//     queue.push( [ 0, null ] );
+//     // _v[ 0 ] = true;
+//
+//     while ( queue.length )
+//     {
+//         const [ u, p ] = queue.pop();
+//
+//         if ( u < 0 )
+//         {
+//             const actual = -u - 1;
+//             exit[ actual ] = time++;
+//             continue;
+//         }
+//
+//         if ( !parent[ u ] && p !== null )
+//         {
+//             edges.tree.push( [ p, u ] );
+//             parent[ u ] = p;
+//         }
+//         else if ( p !== null )
+//             edges.forward.push( [ p, u ] );
+//
+//         if ( _v[ u ] ) continue;
+//
+//         enter[ u ]  = time++;
+//         _v[ u ]     = true;
+//
+//         queue.push( [ -u - 1, p ] );
+//         console.log( u );
+//
+//         const children = list[ u ].slice().reverse();
+//
+//         for ( const v of children )
+//         {
+//             if ( !_v[ v ] )
+//                 queue.push( [ v, u ] );
+//             else
+//             {
+//                 if ( !exit[ u ] && !exit[ v ] )
+//                     edges.back.push( [ u, v ] );
+//                 else if ( !exit[ u ] )
+//                     edges.cross.push( [ u, v ] );
+//             }
+//         }
+//     }
+//
+//     // console.log( `${u} -> ${v}, times: ${enter[ u ]} > ${exit[ u ]} => ${enter[ v ]} > ${exit[ v ]}` );
+//
+//     // raw.forEach( ( [ u, p ] ) => {
+//     //     edges.info.push( `${p} -> ${u}, times: ${enter[ p ]} > ${exit[ p ]} => ${enter[ u ]} > ${exit[ u ]}` );
+//     //
+//     //     // if ( enter[ p ] > enter[ u ] && exit[ p ] < exit[ u ] )
+//     //     //     edges.back.push( [ p, u ] );
+//     //     // else if ( enter[ p ] > exit[ u ] )
+//     //     //     edges.cross.push( [ p, u ] );
+//     //
+//     //     if ( enter[ p ] > exit[ u ] )
+//     //         edges.cross.push( [ p, u ] );
+//     //     else
+//     //         edges.back.push( [ p, u ] );
+//     // } );
+//
+//     // edges.raw = raw;
+//     return edges;
+// }
+//
+// const
+//     testGraphVisual = `          ┌─────────┐
+// ┌─────────┤ START 0 │
+// │         └────┬────┘
+// │              │
+// │              V
+// │            ┌───┐
+// │     ┌──────┤ 1 │
+// │     │      └─┬─┘
+// │     │        │
+// │     │        V
+// │     │      ┌───┐
+// │     │      │ 2 │<───────────┐
+// │     │      └─┬─┘            │
+// │     │        │              │
+// │     │        V              │
+// │     │      ┌───┐            │
+// │     └─────>│   │            │
+// │     ┌──────┤ 3 ├──────┐     │
+// │     │      └───┘      │     │
+// │     │                 │     │
+// │     V                 V     │
+// │   ┌───┐             ┌───┐   │
+// │   │ 4 │             │ 5 │   │
+// │   └─┬─┘             └─┬─┘   │
+// │     │                 │     │
+// │     │                 │     │
+// │     │      ┌───┐      │     │
+// │     └─────>│ 6 │<─────┘     │
+// │            │   ├────────────┘
+// │            └─┬─┘
+// │              │
+// │              V
+// │            ┌───┐
+// │            │ 7 │
+// │            └─┬─┘
+// │              │
+// │              V
+// │         ┌─────────┐
+// └────────>│  EXIT 8 │
+//           └─────────┘
+// `,
+//     util = require( 'util' ),
+//     def = { colors: true, depth: 4 },
+//     nice = ( o, d = {} ) => util.inspect( o, Object.assign( def, typeof d === 'number' ? { depth: d } : d ) ),
+//     testGraph = [
+//         [ 1, 8 ],    // start
+//         [ 2, 3 ],    // a
+//         [ 3 ],       // b
+//         [ 4, 5 ],    // c
+//         [ 6 ],       // d
+//         [ 6 ],       // e
+//         [ 2, 7 ],    // f
+//         [ 8 ],       // g
+//         []           // end
+//     ],
+//     qr = qdfs( testGraph );
+//     // result = DFS( testGraph );
+//
+// console.log( testGraphVisual );
+// console.log( nice( qr, 4 ) );
+

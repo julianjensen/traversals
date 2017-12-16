@@ -134,11 +134,11 @@
         "no-invalid-regexp": 2,
         "no-irregular-whitespace": "off",
         "no-iterator": 2,
-        "no-label-var": 2,
+        "no-label-var": 0,
         "no-labels": [
-            2,
+            1,
             {
-                "allowLoop": false,
+                "allowLoop": true,
                 "allowSwitch": false
             }
         ],
