@@ -70,4 +70,53 @@ DFS( someGraph, { edge: { tree: ( from, to ) => console.log( `tree from ${from} 
 // BFS also has no forward edges.
 ```
 
+For quick and easy traversals, when you just want to be called in once per node in a particular order, you can use the function shown below. The following shows various uses of the pre-order walk. The other three walks work in an identical manner.
+
+```js
+const
+    { preOrder } = require( 'traversals' ); // The other 3 functions
+                                                // are: postOrder, 
+                                                // rPreOrdder, and
+                                                // rPostOrder
+
+// For all of these walks, you can abort it at any stage by returning
+// or calling the third argument. In the first example, however, we
+// just run allthe way through.
+
+preOrder( testGraph, ( nodeNum, preNum ) => {
+    // preNum just goes from 0 to N - 1
+    console.log( `Node index: ${nodeNum}, pre-order index: ${preNum}` );
+} );
+
+// In this case, we stop the walk and return a result, in this case, the
+// returnValue will be 3
+let returnValue = preOrder( testGraph, ( nodeNum, index, kill ) => {
+    console.log( `Node index: ${nodeNum}, pre-order index: ${preNum}` );
+    // Return kill to stop the walk, here we stop on node index 3
+    return nodeNum === 3 && kill;
+} );
+
+const preSeq = [];
+
+// Return value here will be 4
+returnValue = preOrder( testGraph, ( nodeNum, index, kill ) => {
+    // Create a list of node indices in pre-order
+    preSeq.push( nodeNum );
+    // When we reach node index 4, call kill to stop the walk
+    nodeNum === 4 && kill();
+}, 0 );
+
+let prev, 
+    nodeJustBeforeThis = 3;
+
+// Here we stop the walk with an arbitrary value of our own choosing
+// again by calling the kill function with the value.
+returnValue = preOrder( testGraph, ( nodeNum, index, kill ) => {
+    nodeNum === nodeJustBeforeThis && kill( prev );
+    prev = nodeNum;
+} );
+
+```
+
 ## API
+

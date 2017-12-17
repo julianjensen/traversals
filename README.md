@@ -70,7 +70,56 @@ DFS( someGraph, { edge: { tree: ( from, to ) => console.log( `tree from ${from} 
 // BFS also has no forward edges.
 ```
 
+For quick and easy traversals, when you just want to be called in once per node in a particular order, you can use the function shown below. The following shows various uses of the pre-order walk. The other three walks work in an identical manner.
+
+```js
+const
+    { preOrder } = require( 'traversals' ); // The other 3 functions
+                                                // are: postOrder, 
+                                                // rPreOrdder, and
+                                                // rPostOrder
+
+// For all of these walks, you can abort it at any stage by returning
+// or calling the third argument. In the first example, however, we
+// just run allthe way through.
+
+preOrder( testGraph, ( nodeNum, preNum ) => {
+    // preNum just goes from 0 to N - 1
+    console.log( `Node index: ${nodeNum}, pre-order index: ${preNum}` );
+} );
+
+// In this case, we stop the walk and return a result, in this case, the
+// returnValue will be 3
+let returnValue = preOrder( testGraph, ( nodeNum, index, kill ) => {
+    console.log( `Node index: ${nodeNum}, pre-order index: ${preNum}` );
+    // Return kill to stop the walk, here we stop on node index 3
+    return nodeNum === 3 && kill;
+} );
+
+const preSeq = [];
+
+// Return value here will be 4
+returnValue = preOrder( testGraph, ( nodeNum, index, kill ) => {
+    // Create a list of node indices in pre-order
+    preSeq.push( nodeNum );
+    // When we reach node index 4, call kill to stop the walk
+    nodeNum === 4 && kill();
+}, 0 );
+
+let prev, 
+    nodeJustBeforeThis = 3;
+
+// Here we stop the walk with an arbitrary value of our own choosing
+// again by calling the kill function with the value.
+returnValue = preOrder( testGraph, ( nodeNum, index, kill ) => {
+    nodeNum === nodeJustBeforeThis && kill( prev );
+    prev = nodeNum;
+} );
+
+```
+
 ## API
+
 ## Functions
 
 <dl>
@@ -111,7 +160,7 @@ add the actual start index as the third argument.</p>
 <dl>
 <dt><a href="#TraversalOptions">TraversalOptions</a> : <code>object</code></dt>
 <dd></dd>
-<dt><a href="#EdgeCB">EdgeCB</a> : <code>function</code></dt>
+<dt><a href="#EdgeCB">EdgeCB</a> : <code><a href="#EdgeCallback">EdgeCallback</a></code> | <code>Object</code></dt>
 <dd><p>You can define the edge field as a normal function and it will be called on each discovered edge with the
 <code>from</code> and <code>to</code> node numbers, as well as the edge type. Alternatively, yuou can also just set the field to an object.</p>
 <p>The function or object can have four optional fields, one for each edge type. These will be called on the discovery
@@ -120,6 +169,14 @@ of their respective types. If you added these fields to a function, the main fun
 <dt><a href="#DFSTraversalResult">DFSTraversalResult</a> : <code>object</code></dt>
 <dd></dd>
 <dt><a href="#BFSTraversalResult">BFSTraversalResult</a> : <code>object</code></dt>
+<dd></dd>
+<dt><a href="#SimpleWalkerCallback">SimpleWalkerCallback</a></dt>
+<dd></dd>
+<dt><a href="#NodeWalkerCallback">NodeWalkerCallback</a></dt>
+<dd></dd>
+<dt><a href="#EdgeTypeCallback">EdgeTypeCallback</a></dt>
+<dd></dd>
+<dt><a href="#EdgeCallback">EdgeCallback</a></dt>
 <dd></dd>
 </dl>
 
@@ -167,7 +224,7 @@ add the actual start index as the third argument.
 | Param | Type | Default |
 | --- | --- | --- |
 | nodes | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> |  | 
-| fn | <code>function</code> |  | 
+| fn | [<code>SimpleWalkerCallback</code>](#SimpleWalkerCallback) |  | 
 | [root] | <code>number</code> | <code>0</code> | 
 
 <a name="postOrder"></a>
@@ -181,7 +238,7 @@ add the actual start index as the third argument.
 | Param | Type | Default |
 | --- | --- | --- |
 | nodes | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> |  | 
-| fn | <code>function</code> |  | 
+| fn | [<code>SimpleWalkerCallback</code>](#SimpleWalkerCallback) |  | 
 | [root] | <code>number</code> | <code>0</code> | 
 
 <a name="rPreOrder"></a>
@@ -195,7 +252,7 @@ add the actual start index as the third argument.
 | Param | Type | Default |
 | --- | --- | --- |
 | nodes | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> |  | 
-| fn | <code>function</code> |  | 
+| fn | [<code>SimpleWalkerCallback</code>](#SimpleWalkerCallback) |  | 
 | [root] | <code>number</code> | <code>0</code> | 
 
 <a name="rPostOrder"></a>
@@ -209,7 +266,7 @@ add the actual start index as the third argument.
 | Param | Type | Default |
 | --- | --- | --- |
 | nodes | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> |  | 
-| fn | <code>function</code> |  | 
+| fn | [<code>SimpleWalkerCallback</code>](#SimpleWalkerCallback) |  | 
 | [root] | <code>number</code> | <code>0</code> | 
 
 <a name="TraversalOptions"></a>
@@ -222,10 +279,10 @@ add the actual start index as the third argument.
 | --- | --- | --- | --- |
 | nodes | <code>Array.&lt;Array.&lt;number&gt;&gt;</code> |  | Optionally, you can put your array of nodes here |
 | startIndex | <code>number</code> | <code>0</code> | Where to start, defaults to zero |
-| pre | <code>function</code> |  | Callback in pre-order |
-| post | <code>function</code> |  | Callback in post-order |
-| rpre | <code>function</code> |  | Callback in reverse pre-order |
-| rpost | <code>function</code> |  | Callback in reverse post-order |
+| pre | [<code>NodeWalkerCallback</code>](#NodeWalkerCallback) |  | Callback in pre-order |
+| post | [<code>NodeWalkerCallback</code>](#NodeWalkerCallback) |  | Callback in post-order |
+| rpre | [<code>NodeWalkerCallback</code>](#NodeWalkerCallback) |  | Callback in reverse pre-order |
+| rpost | [<code>NodeWalkerCallback</code>](#NodeWalkerCallback) |  | Callback in reverse post-order |
 | edge | [<code>EdgeCB</code>](#EdgeCB) |  | Callback for every edge or each type, see `EdgeCB` below |
 | spanningTree | <code>boolean</code> | <code>true</code> | A strongly connected graph with all nodes reachable from a common root |
 | flat | <code>boolean</code> | <code>false</code> | Use an iterative walker, not recursive |
@@ -239,7 +296,7 @@ add the actual start index as the third argument.
 
 <a name="EdgeCB"></a>
 
-## EdgeCB : <code>function</code>
+## EdgeCB : [<code>EdgeCallback</code>](#EdgeCallback) \| <code>Object</code>
 You can define the edge field as a normal function and it will be called on each discovered edge with the
 `from` and `to` node numbers, as well as the edge type. Alternatively, yuou can also just set the field to an object.
 
@@ -251,10 +308,10 @@ of their respective types. If you added these fields to a function, the main fun
 
 | Name | Type | Description |
 | --- | --- | --- |
-| tree | <code>function</code> | Callback for each tree edge |
-| forward | <code>function</code> | Callback for each forward edge (not applicable for BFS) |
-| back | <code>function</code> | Callback for each back edge |
-| cross | <code>function</code> | Callback for each cross edge |
+| tree | [<code>EdgeTypeCallback</code>](#EdgeTypeCallback) | Callback for each tree edge |
+| forward | [<code>EdgeTypeCallback</code>](#EdgeTypeCallback) | Callback for each forward edge (not applicable for BFS) |
+| back | [<code>EdgeTypeCallback</code>](#EdgeTypeCallback) | Callback for each back edge |
+| cross | [<code>EdgeTypeCallback</code>](#EdgeTypeCallback) | Callback for each cross edge |
 
 **Example**  
 ```js
@@ -303,4 +360,69 @@ DFS( nodes, {
 | rPreOrder | <code>Array.&lt;number&gt;</code> | 
 | levels | <code>Array.&lt;number&gt;</code> | 
 | edges | <code>BFSEdges</code> | 
+
+<a name="SimpleWalkerCallback"></a>
+
+## SimpleWalkerCallback
+**Kind**: global typedef  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| nodeIndex | <code>number</code> | The index of the node input the input array |
+| orderedIndex | <code>number</code> | The index into the ordered walk, goes from 0 to N - 1 |
+| kill | <code>function</code> | Return this or call it, with or without a value, to stop the walk |
+
+<a name="NodeWalkerCallback"></a>
+
+## NodeWalkerCallback
+**Kind**: global typedef  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| nodeIndex | <code>number</code> | The index of the node in the original input array |
+| orderedIndex | <code>number</code> | The sequence number of the node in order, goes 0 to N - 1 |
+| orderedSequence | <code>Array.&lt;number&gt;</code> | The entire ordered sequence |
+
+<a name="EdgeTypeCallback"></a>
+
+## EdgeTypeCallback
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| from | <code>number</code> | 
+| to | <code>number</code> | 
+
+<a name="EdgeCallback"></a>
+
+## EdgeCallback
+**Kind**: global typedef  
+
+| Param | Type |
+| --- | --- |
+| from | <code>number</code> | 
+| to | <code>number</code> | 
+| type | <code>string</code> | 
+
+[coveralls-url]: https://coveralls.io/github/julianjensen/dominators?branch=master
+[coveralls-image]: https://coveralls.io/repos/github/julianjensen/dominators/badge.svg?branch=master
+
+[travis-url]: https://travis-ci.org/julianjensen/dominators
+[travis-image]: http://img.shields.io/travis/julianjensen/dominators.svg
+
+[depstat-url]: https://gemnasium.com/github.com/julianjensen/dominators
+[depstat-image]: https://gemnasium.com/badges/github.com/julianjensen/dominators.svg
+
+[npm-url]: https://badge.fury.io/js/dominators
+[npm-image]: https://badge.fury.io/js/dominators.svg
+
+[license-url]: https://github.com/julianjensen/dominators/blob/master/LICENSE
+[license-image]: https://img.shields.io/badge/license-MIT-brightgreen.svg
+
+[snyk-url]: https://snyk.io/test/github/julianjensen/dominators
+[snyk-image]: https://snyk.io/test/github/julianjensen/dominators/badge.svg
+
+[david-dm-url]: https://david-dm.org/julianjensen/dominators
+[david-dm-image]: https://david-dm.org/julianjensen/dominators.svg
 

@@ -10,10 +10,10 @@
  * @typedef {object} TraversalOptions
  * @property {Array<Array<number>>} [nodes]     - Optionally, you can put your array of nodes here
  * @property {number} [startIndex=0]            - Where to start, defaults to zero
- * @property {function(number):boolean} [pre]   - Callback in pre-order
- * @property {function(number):boolean} [post]  - Callback in post-order
- * @property {function(number):boolean} [rpre]  - Callback in reverse pre-order
- * @property {function(number):boolean} [rpost] - Callback in reverse post-order
+ * @property {NodeWalkerCallback} [pre]         - Callback in pre-order
+ * @property {NodeWalkerCallback} [post]        - Callback in post-order
+ * @property {NodeWalkerCallback} [rpre]        - Callback in reverse pre-order
+ * @property {NodeWalkerCallback} [rpost]       - Callback in reverse post-order
  * @property {EdgeCB} [edge]                    - Callback for every edge or each type, see `EdgeCB` below
  * @property {boolean} [spanningTree=true]      - A strongly connected graph with all nodes reachable from a common root
  * @property {boolean} [flat=false]             - Use an iterative walker, not recursive
@@ -52,11 +52,11 @@
  *     edge: everyEdge
  * // ... } );
  *
- * @typedef {function(number, number, type):*|Object} EdgeCB
- * @property {function(number, number):*} [tree]        - Callback for each tree edge
- * @property {function(number, number):*} [forward]     - Callback for each forward edge (not applicable for BFS)
- * @property {function(number, number):*} [back]        - Callback for each back edge
- * @property {function(number, number):*} [cross]       - Callback for each cross edge
+ * @typedef {EdgeCallback|Object} EdgeCB
+ * @property {EdgeTypeCallback} [tree]        - Callback for each tree edge
+ * @property {EdgeTypeCallback} [forward]     - Callback for each forward edge (not applicable for BFS)
+ * @property {EdgeTypeCallback} [back]        - Callback for each back edge
+ * @property {EdgeTypeCallback} [cross]       - Callback for each cross edge
  */
 
 /**
@@ -101,6 +101,37 @@
  * @property {Array<Edge>} tree
  * @property {Array<Edge>} back
  * @property {Array<Edge>} cross
+ */
+
+/**
+ * @callback
+ * @name SimpleWalkerCallback
+ * @param {number} nodeIndex        - The index of the node input the input array
+ * @param {number} orderedIndex     - The index into the ordered walk, goes from 0 to N - 1
+ * @param {function(*=)} kill       - Return this or call it, with or without a value, to stop the walk
+ */
+
+/**
+ * @callback
+ * @name NodeWalkerCallback
+ * @param {number} nodeIndex                - The index of the node in the original input array
+ * @param {number} orderedIndex             - The sequence number of the node in order, goes 0 to N - 1
+ * @param {Array<number>} orderedSequence   - The entire ordered sequence
+ */
+
+/**
+ * @callback
+ * @name EdgeTypeCallback
+ * @property {number} from
+ * @property {number} to
+ */
+
+/**
+ * @callback
+ * @name EdgeCallback
+ * @param {number} from
+ * @param {number} to
+ * @param {string} type
  */
 
 /**
@@ -435,7 +466,7 @@ function generic_walker( list, opts = defaultOptions, _walker, isBFS )
  * add the actual start index as the third argument.
  *
  * @param {Array<Array<number>>} nodes
- * @param {function(number, number, function):*} fn
+ * @param {SimpleWalkerCallback} fn
  * @param {number} [root=0]
  */
 function preOrder( nodes, fn, root = 0 )
@@ -451,7 +482,7 @@ function preOrder( nodes, fn, root = 0 )
  * add the actual start index as the third argument.
  *
  * @param {Array<Array<number>>} nodes
- * @param {function(number, number, function):*} fn
+ * @param {SimpleWalkerCallback} fn
  * @param {number} [root=0]
  */
 function postOrder( nodes, fn, root = 0 )
@@ -466,7 +497,7 @@ function postOrder( nodes, fn, root = 0 )
  * @param {boolean} isPost
  * @param {Array<Array<number>>} nodes
  * @param {number} root
- * @param {function(number, number, function):*} [cb]
+ * @param {SimpleWalkerCallback} [cb]
  * @private
  */
 function reverseOrder( isPost, nodes, root, cb )
@@ -498,7 +529,7 @@ function reverseOrder( isPost, nodes, root, cb )
  * add the actual start index as the third argument.
  *
  * @param {Array<Array<number>>} nodes
- * @param {function(number, number, function):*} fn
+ * @param {SimpleWalkerCallback} fn
  * @param {number} [root=0]
  */
 function rPreOrder( nodes, fn, root = 0 )
@@ -515,7 +546,7 @@ function rPreOrder( nodes, fn, root = 0 )
  * add the actual start index as the third argument.
  *
  * @param {Array<Array<number>>} nodes
- * @param {function(number, number, function):*} fn
+ * @param {SimpleWalkerCallback} fn
  * @param {number} [root=0]
  */
 function rPostOrder( nodes, fn, root = 0 )
@@ -530,7 +561,7 @@ function rPostOrder( nodes, fn, root = 0 )
  * @param {boolean} isPost
  * @param {Array<Array<number>>} nodes
  * @param {number} root
- * @param {function(number, number, function):*} [fn]
+ * @param {SimpleWalkerCallback} [fn]
  * @private
  */
 function prePostOrder( isPost, nodes, root, fn )
@@ -579,152 +610,3 @@ function prePostOrder( isPost, nodes, root, fn )
 }
 
 module.exports = { DFS, BFS, preOrder, postOrder, rPreOrder, rPostOrder };
-
-// function qdfs( list )
-// {
-//     const
-//         parent = [],
-//         enter = [],
-//         exit = [],
-//         queue = [],
-//         discovery = [],
-//         _v = [],
-//         edges = {
-//             tree: [],
-//             back: [],
-//             forward: [],
-//             cross: [],
-//             info: []
-//         },
-//         raw = [];
-//
-//     let time = 0;
-//
-//     queue.push( [ 0, null ] );
-//     // _v[ 0 ] = true;
-//
-//     while ( queue.length )
-//     {
-//         const [ u, p ] = queue.pop();
-//
-//         if ( u < 0 )
-//         {
-//             const actual = -u - 1;
-//             exit[ actual ] = time++;
-//             continue;
-//         }
-//
-//         if ( !parent[ u ] && p !== null )
-//         {
-//             edges.tree.push( [ p, u ] );
-//             parent[ u ] = p;
-//         }
-//         else if ( p !== null )
-//             edges.forward.push( [ p, u ] );
-//
-//         if ( _v[ u ] ) continue;
-//
-//         enter[ u ]  = time++;
-//         _v[ u ]     = true;
-//
-//         queue.push( [ -u - 1, p ] );
-//         console.log( u );
-//
-//         const children = list[ u ].slice().reverse();
-//
-//         for ( const v of children )
-//         {
-//             if ( !_v[ v ] )
-//                 queue.push( [ v, u ] );
-//             else
-//             {
-//                 if ( !exit[ u ] && !exit[ v ] )
-//                     edges.back.push( [ u, v ] );
-//                 else if ( !exit[ u ] )
-//                     edges.cross.push( [ u, v ] );
-//             }
-//         }
-//     }
-//
-//     // console.log( `${u} -> ${v}, times: ${enter[ u ]} > ${exit[ u ]} => ${enter[ v ]} > ${exit[ v ]}` );
-//
-//     // raw.forEach( ( [ u, p ] ) => {
-//     //     edges.info.push( `${p} -> ${u}, times: ${enter[ p ]} > ${exit[ p ]} => ${enter[ u ]} > ${exit[ u ]}` );
-//     //
-//     //     // if ( enter[ p ] > enter[ u ] && exit[ p ] < exit[ u ] )
-//     //     //     edges.back.push( [ p, u ] );
-//     //     // else if ( enter[ p ] > exit[ u ] )
-//     //     //     edges.cross.push( [ p, u ] );
-//     //
-//     //     if ( enter[ p ] > exit[ u ] )
-//     //         edges.cross.push( [ p, u ] );
-//     //     else
-//     //         edges.back.push( [ p, u ] );
-//     // } );
-//
-//     // edges.raw = raw;
-//     return edges;
-// }
-//
-// const
-//     testGraphVisual = `          ┌─────────┐
-// ┌─────────┤ START 0 │
-// │         └────┬────┘
-// │              │
-// │              V
-// │            ┌───┐
-// │     ┌──────┤ 1 │
-// │     │      └─┬─┘
-// │     │        │
-// │     │        V
-// │     │      ┌───┐
-// │     │      │ 2 │<───────────┐
-// │     │      └─┬─┘            │
-// │     │        │              │
-// │     │        V              │
-// │     │      ┌───┐            │
-// │     └─────>│   │            │
-// │     ┌──────┤ 3 ├──────┐     │
-// │     │      └───┘      │     │
-// │     │                 │     │
-// │     V                 V     │
-// │   ┌───┐             ┌───┐   │
-// │   │ 4 │             │ 5 │   │
-// │   └─┬─┘             └─┬─┘   │
-// │     │                 │     │
-// │     │                 │     │
-// │     │      ┌───┐      │     │
-// │     └─────>│ 6 │<─────┘     │
-// │            │   ├────────────┘
-// │            └─┬─┘
-// │              │
-// │              V
-// │            ┌───┐
-// │            │ 7 │
-// │            └─┬─┘
-// │              │
-// │              V
-// │         ┌─────────┐
-// └────────>│  EXIT 8 │
-//           └─────────┘
-// `,
-//     util = require( 'util' ),
-//     def = { colors: true, depth: 4 },
-//     nice = ( o, d = {} ) => util.inspect( o, Object.assign( def, typeof d === 'number' ? { depth: d } : d ) ),
-//     testGraph = [
-//         [ 1, 8 ],    // start
-//         [ 2, 3 ],    // a
-//         [ 3 ],       // b
-//         [ 4, 5 ],    // c
-//         [ 6 ],       // d
-//         [ 6 ],       // e
-//         [ 2, 7 ],    // f
-//         [ 8 ],       // g
-//         []           // end
-//     ],
-//     qr = qdfs( testGraph );
-//     // result = DFS( testGraph );
-//
-// console.log( testGraphVisual );
-// console.log( nice( qr, 4 ) );
-
