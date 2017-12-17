@@ -37,7 +37,8 @@
  * // For each backedge
  * DFS( nodes, {
  *     edge: { back: ( from, to ) => console.log( `back edge from ${from} to ${to}` )
- * // ... } );
+ *     // ...
+ * } );
  *
  * @example
  * // For all edges and one just for tree edges
@@ -50,7 +51,8 @@
  *
  * DFS( nodes, {
  *     edge: everyEdge
- * // ... } );
+ *     // ...
+ * } );
  *
  * @typedef {EdgeCallback|Object} EdgeCB
  * @property {EdgeTypeCallback} [tree]        - Callback for each tree edge

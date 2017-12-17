@@ -14,7 +14,7 @@
         "minor": "npm version minor && npm publish",
         "major": "npm version major && npm publish",
         "postpublish": "git push origin master --follow-tags",
-        "docs": "npx jsdoc-to-markdown index.js > tmp.md && cp RM.md README.md && cat tmp.md FOOTER.md >> README.md",
+        "docs": "npx jsdoc-to-markdown index.js > tmp.md && cp RM.md README.md && cat tmp.md FOOTER.md >> README.md && rm tmp.md",
         "changelog": "npx auto-changelog -p -l 10 && git add CHANGELOG.md",
         "marktoc": "npx replace -s -q '### Changelog' '<!-- START doctoc -->\\\n<!-- END doctoc -->' CHANGELOG.md",
         "toc": "npx doctoc --github --title \"### Changelog\" CHANGELOG.md",
